@@ -17,7 +17,10 @@ local mod = {
 }
 local libs = {
     "tipTracker",
+    "trait",
+    --"pawnSight",
     "seriousDamage/seriousDamage",
+    "actions+/actions+",
     "weaponPreview",
     "queuedPreview",
     "worldConstants",

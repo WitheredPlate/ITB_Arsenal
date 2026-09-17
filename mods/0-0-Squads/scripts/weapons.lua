@@ -374,7 +374,7 @@ function ffrg_Prime_KO_BodySlam:GetSkillEffect(p1, p2)
     end
 
     if Board:IsPawnSpace(p2) then
-        if Board:IsDeadly(damage,Board:GetPawn(p2)) then
+        if Board:IsDeadly(damage,Pawn) then
             ko = true
             damage.bKO_Effect = true
         else
