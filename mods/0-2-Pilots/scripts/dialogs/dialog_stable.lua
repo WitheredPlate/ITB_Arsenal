@@ -572,6 +572,35 @@ return {
 		"This thing kicks like a mule - and I am loving every second of it.",
 		"A wild ride; just my typa' weapon.",
 		"Dishing out extra carnage at the cost of hull failure? Sounds like a good deal to me."
+	},
+
+
+-------------
+-- Arsenal --
+-------------
+
+	Mech_Push = {
+		"",
+		"",
+		"",
+		""
+	},
+	Mech_Shove = {
+		"",
+		""
+	},
+	Mech_Flip = {
+		"",
+		"",
+		""
+	},
+	Mech_Accelerate = {
+		"",
+		""
+	},
+	Mech_Overclock = {
+		"",
+		""
 	}
 }
 

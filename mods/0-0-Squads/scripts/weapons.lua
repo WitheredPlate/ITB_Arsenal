@@ -11,6 +11,9 @@
 --== Ranged ==--
 -- Caustic Shells
 
+--== Support ==--
+-- Overclock
+
 --== Passive ==--
 -- Ionic Batteries
 
@@ -29,9 +32,12 @@ local path = mod_loader.mods[modApi.currentMod].resourcePath
 local imagePath = path .."img/"
 
 local files = {
-    "weapons/ffrg_prime_bodyslam.png",
+    "weapons/ffrg_prime_KO_bodyslam.png",
     "weapons/ffrg_brute_splitshot.png",
-    "weapons/ffrg_ranged_caustic.png",
+    "weapons/ffrg_brute_shovecharge.png",
+    "weapons/ffrg_ranged_TC_caustic.png",
+    "weapons/ffrg_science_accelerate.png",
+    "weapons/ffrg_support_overclock.png",
     "weapons/ffrg_passive_acidshield.png",
     "effects/ffrg_shot_split_U.png",
     "effects/ffrg_shot_split_R.png",
@@ -55,7 +61,7 @@ local files = {
     "effects/ffrg_explo_pushmelt_R.png",
     "effects/ffrg_explo_pushmelt_D.png",
     "effects/ffrg_explo_pushmelt_L.png",
-    "effects/ffrg_shotup_caustic.png",
+    "effects/ffrg_shotup_acid.png",
     "effects/ffrg_body_slam_move_down.png",
     "effects/ffrg_body_slam_move_up.png",
     "effects/ffrg_body_slam_move_left.png",
@@ -64,8 +70,17 @@ local files = {
     "effects/ffrg_body_slam_fail_up.png",
     "effects/ffrg_body_slam_fail_left.png",
     "effects/ffrg_body_slam_fail_right.png",
-    "effects/ffrg_body_slam_tip.png"
+    "effects/ffrg_body_slam_tip.png",
+    "combat/icons/ffrg_icon_overboost_glow.png",
+    "combat/icons/ffrg_icon_overboost_miss.png",
+    "combat/icons/ffrg_icon_overboost_glance.png",
+    "combat/icons/ffrg_icon_overboost_fail.png"
 }
+
+Location["combat/icons/ffrg_icon_overboost_glow.png"] = Point(-23,9)
+Location["combat/icons/ffrg_icon_overboost_miss.png"] = Point(-23,9)
+Location["combat/icons/ffrg_icon_overboost_glance.png"] = Point(-23,9)
+Location["combat/icons/ffrg_icon_overboost_fail.png"] = Point(-23,9)
 
 for _, file in ipairs(files) do
     modApi:appendAsset("img/".. file, imagePath .. file)
@@ -258,7 +273,7 @@ ffrg_Prime_KO_BodySlam = Skill:new{
     Name = "Body Slam",
     Description = "Attempt to slam self onto an adjacent tile. If the tile is occupied, damage self and target. On kill, shove adjacent tiles.",
     Class = "Prime",
-    Icon = "weapons/ffrg_prime_bodyslam.png",
+    Icon = "weapons/ffrg_prime_KO_bodyslam.png",
     OnKill = "Shove adjacent",
     LaunchSound = "weapons/shift",
     SlamSound = "impact/generic/mech",
@@ -368,13 +383,16 @@ function ffrg_Prime_KO_BodySlam:GetSkillEffect(p1, p2)
     local ko = false
     local id
     local damage_temp = self.Damage
+    local p2T = p2
     if Pawn then
         id = Pawn:GetId()
         if Pawn:IsBoosted() then damage_temp = damage_temp + 1 end
     end
 
     if Board:IsPawnSpace(p2) then
-        if Board:IsDeadly(damage,Pawn) then
+        local pawn = Board:GetPawn(p2)
+        if pawn:GetSpace() ~= p2 then p2T = pawn:GetSpace() end
+        if Board:IsDeadly(damage,Pawn) and not pawn:IsCorpse() then
             ko = true
             damage.bKO_Effect = true
         else
@@ -468,7 +486,7 @@ function ffrg_Prime_KO_BodySlam:GetSkillEffect(p1, p2)
     end
 
     ret:AddDelay(0.2)
-    if not miss and fail and not Pawn:IsFire() and not Board:IsBuilding(p2) and ( Board:GetTerrain(p2) == TERRAIN_FOREST or Board:IsFire(p2) ) then
+    if not miss and p2T == p2 and fail and not Pawn:IsFire() and not Board:IsBuilding(p2) and ( Board:GetTerrain(p2) == TERRAIN_FOREST or Board:IsFire(p2) ) then
         ret:AddScript("Board:GetPawn("..id.."):SetFire(false)")
     end
 
@@ -631,16 +649,119 @@ function ffrg_Brute_SplitShot:GetSkillEffect(p1,p2)
 end
 
 
+------------------
+-- Blasted Wake --
+------------------
+
+ffrg_Brute_ShoveCharge = Skill:new{
+    Name = "Blasted Wake",
+    Description = "Charge forwards and stop, shoving the next tile forwards with the force of the charge.",
+    Class = "Brute",
+    Icon = "weapons/ffrg_brute_shovecharge.png",
+    LaunchSound = "/support/train/move",
+    WakeSound = "mech/science/exchange_mech/death",
+    WakeSound2 = "",
+    Anim1 = "airpush_",
+    Fire = false,
+    Upgrades = 2,
+    Range = 3,
+    UpgradeCost = {1,2},
+    TipImage = {
+        Unit = Point(2,4),
+        Enemy = Point(2,1),
+        Target = Point(2,2)
+    }
+}
+
+ffrg_Brute_ShoveCharge_A = ffrg_Brute_ShoveCharge:new{
+    UpgradeDescription = "Increases the max distance and force by 2.",
+    Range = 5
+}
+ffrg_Brute_ShoveCharge_B = ffrg_Brute_ShoveCharge:new{
+    UpgradeDescription = "Adds fire to the targeted tile.",
+    Fire = true,
+    WakeSound2 = "props/forest_fire"
+}
+ffrg_Brute_ShoveCharge_AB = ffrg_Brute_ShoveCharge:new{
+    Range = 5,
+    Fire = true,
+    WakeSound2 = "props/forest_fire"
+}
+
+Weapon_Texts.ffrg_Brute_ShoveCharge_Upgrade1 = "+2 Range"
+Weapon_Texts.ffrg_Brute_ShoveCharge_Upgrade2 = "Add Fire"
+
+function ffrg_Brute_ShoveCharge:GetTargetArea(point)
+	local ret = PointList()
+
+	for i = DIR_START, DIR_END do
+		for k = 1, self.Range do
+			local curr = DIR_VECTORS[i]*k + point
+			if Board:IsValid(curr) and not Board:IsBlocked(curr, Pawn:GetPathProf()) then
+				ret:push_back(DIR_VECTORS[i]*k + point)
+			else
+				break
+			end
+		end
+	end
+
+	return ret
+end
+
+function ffrg_Brute_ShoveCharge:GetSkillEffect(p1,p2)
+    local ret = SkillEffect()
+    local distance = p1:Manhattan(p2)
+    local direction = GetDirection(p2 - p1)
+    local charge = PointList()
+    local blastTile = p2+DIR_VECTORS[direction]
+    local blast
+    if Board:IsValid(blastTile) then
+        blast = SpaceDamage(blastTile,0)
+        if distance == 1 then
+            blast.iPush = direction
+            blast.sAnimation = self.Anim1..direction
+        else
+            blast.iPush = 5
+            local sDelay = 0.06*(distance+2)
+            if distance < 3 then sDelay = sDelay + (0.03*(2-distance)) end
+            ffrg_Shove.Shove(blastTile, direction, distance, {ret = ret, mode = "simple", delay = sDelay})
+        end
+        if self.Fire then blast.iFire = 1 end
+        blast.sSound = self.WakeSound
+    end
+    ret:AddDelay(0.06)
+    for i = 0, distance do
+        local curr = p1+DIR_VECTORS[direction]*i
+        charge:push_back(curr)
+    end
+    ret:AddCharge(charge,NO_DELAY)
+    for i = 1, distance+1 do
+        local curr = p1 + (DIR_VECTORS[direction]*(i-1))
+        ret:AddBounce(curr,-1)
+        ret:AddDelay(0.06)
+    end
+    if distance < 3 then ret:AddDelay(0.03*(2-distance)) end
+    if blast then
+        ret:AddDamage(blast)
+        ret:AddBounce(blastTile,math.max(-3,(distance)*-1))
+        if self.WakeSound2 ~= "" then
+            ret:AddDamage(SoundEffect(Point(-1,-1),self.WakeSound2))
+        end
+    end
+    return ret
+end
+
+
 --------------------
 -- Caustic Shells --
 --------------------
 
-ffrg_Ranged_Caustic = Skill:new{
+ffrg_Ranged_TC_Caustic = Skill:new{
     Name = "Caustic Shells",
-    Description = "Launch pushing and acidifying artilleries at two tiles.",
+    Description = "Launch two acidic artilleries in different directions.",
     Class = "Ranged",
-    Icon = "weapons/ffrg_ranged_caustic.png",
-    ArtilleryArt = "effects/ffrg_shotup_caustic.png",
+    Icon = "weapons/ffrg_ranged_TC_caustic.png",
+    ArtilleryArt = "effects/ffrg_shotup_acid.png",
     FireSound = "/weapons/acid_shot",
     MeltSound = "props/acid_splash",
     HitSound = "props/acid_splash",
@@ -649,46 +770,51 @@ ffrg_Ranged_Caustic = Skill:new{
     MeltAnim = "ffrg_ExploMelt_",
     SelfAnim = "",
     Backmelt = false,
+    TwoClick = true,
     Damage = 0,
     Upgrades = 2,
     UpgradeCost = {1,3},
     TipImage = {
-        Unit = Point(2,3),
-        Enemy = Point(1,1),
-        Enemy2 = Point(3,1),
-        Target = Point(2,1)
+        Unit = Point(1,3),
+        Enemy1 = Point(1,1),
+        Enemy2 = Point(3,3),
+        Target = Point(1,1),
+        Second_Click = Point(3,3),
+        Length = 5
     }
 }
 
-ffrg_Ranged_Caustic_A = ffrg_Ranged_Caustic:new{
-    UpgradeDescription = "Apply A.C.I.D. to the tile behind the user.",
+ffrg_Ranged_TC_Caustic_A = ffrg_Ranged_TC_Caustic:new{
+    UpgradeDescription = "Apply A.C.I.D. to both tiles behind the user.",
     Backmelt = true,
     TipImage = {
-        Unit = Point(2,3),
-        Enemy = Point(1,1),
-        Enemy2 = Point(3,1),
-        Enemy3 = Point(2,4),
-        Target = Point(2,1)
+        Unit = Point(1,2),
+        Enemy1 = Point(3,2),
+        Enemy2 = Point(1,3),
+        Target = Point(1,0),
+        Second_Click = Point(3,2),
+        Length = 5
     }
 }
-ffrg_Ranged_Caustic_B = ffrg_Ranged_Caustic:new{
+ffrg_Ranged_TC_Caustic_B = ffrg_Ranged_TC_Caustic:new{
     UpgradeDescription = "Increases damage to 1.",
     Damage = 1
 }
-ffrg_Ranged_Caustic_AB = ffrg_Ranged_Caustic:new{
+ffrg_Ranged_TC_Caustic_AB = ffrg_Ranged_TC_Caustic:new{
     Backmelt = true,
     Damage = 1,
     TipImage = {
-        Unit = Point(2,3),
-        Enemy = Point(1,1),
-        Enemy2 = Point(3,1),
-        Enemy3 = Point(2,4),
-        Target = Point(2,1)
+        Unit = Point(1,2),
+        Enemy1 = Point(3,2),
+        Enemy2 = Point(1,3),
+        Target = Point(1,0),
+        Second_Click = Point(3,2),
+        Length = 5
     }
 }
 
-Weapon_Texts.ffrg_Ranged_Caustic_Upgrade1 = "Backmelt"
-Weapon_Texts.ffrg_Ranged_Caustic_Upgrade2 = "+1 Damage"
+Weapon_Texts.ffrg_Ranged_TC_Caustic_Upgrade1 = "Backmelt"
+Weapon_Texts.ffrg_Ranged_TC_Caustic_Upgrade2 = "+1 Damage"
 
 local function DirReverse(dir)
     if dir == 0 then return 2 end
@@ -697,7 +823,7 @@ local function DirReverse(dir)
     return 1
 end
 
-function ffrg_Ranged_Caustic:GetTargetArea(point)
+function ffrg_Ranged_TC_Caustic:GetTargetArea(point)
     local ret = PointList()
     for i = 0, 3 do
         for j = 2, 7 do
@@ -709,39 +835,291 @@ function ffrg_Ranged_Caustic:GetTargetArea(point)
     return ret
 end
 
-function ffrg_Ranged_Caustic:GetSkillEffect(p1, p2)
+function ffrg_Ranged_TC_Caustic:GetSkillEffect(p1, p2)
     local ret = SkillEffect()
     local direction = GetDirection(p2-p1)
+    local artillery = SpaceDamage(p2,self.Damage,direction)
+    artillery.iAcid = 1
     if self.Backmelt then
         local back = p1 - DIR_VECTORS[direction]
+        local melt = SpaceDamage(back,0)
+        melt.iAcid = 1
+        ret:AddDamage(melt)
+    end
+    ret:AddArtillery(artillery,"nil",NO_DELAY)
+    return ret
+end
+
+function ffrg_Ranged_TC_Caustic:GetSecondTargetArea(p1, p2)
+    local direction = GetDirection(p2-p1)
+    local ret = PointList()
+    for i = 0, 3 do
+        if i ~= direction then
+            for j = 2, 7 do
+                local curr = p1+(DIR_VECTORS[i]*j)
+                if not Board:IsValid(curr) then break end
+                ret:push_back(curr)
+            end
+        end
+    end
+    return ret
+end
+
+function ffrg_Ranged_TC_Caustic:GetFinalEffect(p1, p2, p3)
+    local ret = SkillEffect()
+    local direction = GetDirection(p2-p1)
+    local direction2 = GetDirection(p3-p1)
+    local artillery = SpaceDamage(p2,self.Damage,direction)
+    artillery.iAcid = 1
+    artillery.sAnimation = self.HitAnim..direction
+    artillery.sSound = self.HitSound
+    ret:AddArtillery(artillery,self.ArtilleryArt,NO_DELAY)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.FireSound))
+    if self.Backmelt then
+        local back = p1 - DIR_VECTORS[direction]
+        local back2 = p1 - DIR_VECTORS[direction2]
+        local melt = SpaceDamage(back,0)
+        melt.iAcid = 1
+        melt.sSound = self.MeltSound
         if Board:IsValid(back) then
-            local melt = SpaceDamage(back,0)
-            melt.iAcid = 1
-            melt.sSound = self.MeltSound
             melt.sAnimation = self.MeltAnim..DirReverse(direction)
             ret:AddDamage(melt)
         end
-    end
-    for _, i in ipairs({-1,1}) do
-        local dir = direction+i
-        if dir == 4 then dir = 0 end
-        if dir == -1 then dir = 3 end
-        local curr = p2 + DIR_VECTORS[dir]
-        if Board:IsValid(curr) then
-            local artillery = SpaceDamage(curr,self.Damage,direction)
-            artillery.iAcid = 1
-            artillery.sAnimation = self.HitAnim..direction
-            artillery.sSound = self.HitSound
-            ret:AddArtillery(artillery,self.ArtilleryArt,NO_DELAY)
-            ret:AddDamage(SoundEffect(Point(-1,-1),self.FireSound))
+        ret:AddDelay(0.15)
+        if Board:IsValid(back2) then
+            melt.loc = back2
+            melt.sAnimation = self.MeltAnim..DirReverse(direction2)
+            ret:AddDamage(melt)
         end
+    else
         ret:AddDelay(0.15)
     end
+    artillery.loc = p3
+    artillery.iPush = direction2
+    artillery.sAnimation = self.HitAnim..direction2
+    ret:AddArtillery(artillery,self.ArtilleryArt,NO_DELAY)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.FireSound))
     ret:AddDelay(0.55)
     ret:AddDamage(SoundEffect(Point(-1,-1),self.AfterSound))
     return ret
 end
 
+
+---------------------
+-- Boundary Vortex --
+---------------------
+
+ffrg_Science_Accelerate = Skill:new{
+    Name = "Boundary Vortex",
+    Description = "Push adjacent tiles in a spiral and Accelerate allies.",
+    Class = "Science",
+    Icon = "weapons/ffrg_science_accelerate.png",
+    LaunchSound = "mech/flying/jet_mech/death",
+    Animation = "airpush_",
+    SelfAccelerate = false,
+    Force = 1,
+    Upgrades = 2,
+    UpgradeCost = {2,3},
+    TipImage = {
+        Unit = Point(2,2),
+        Enemy1 = Point(2,1),
+        Enemy2 = Point(3,2),
+        Friendly = Point(2,3),
+        Target = Point(1,0),
+        Length = 4.5
+    }
+}
+
+ffrg_Science_Accelerate_A = ffrg_Science_Accelerate:new{
+    UpgradeDescription = "Increases force of push by 1.",
+    Animation = "ffrg_airshove2_",
+    Force = 2
+}
+ffrg_Science_Accelerate_B = ffrg_Science_Accelerate:new{
+    UpgradeDescription = "Accelerates self when used.",
+    SelfAccelerate = true
+}
+ffrg_Science_Accelerate_AB = ffrg_Science_Accelerate:new{
+    Force = 2,
+    Animation = "ffrg_airshove2_",
+    SelfAccelerate = true
+}
+
+Weapon_Texts.ffrg_Science_Accelerate_Upgrade1 = "+1 Force"
+Weapon_Texts.ffrg_Science_Accelerate_Upgrade2 = "Accelerate Self"
+
+local FFRG_PUSHERS = {
+    Point(2,1),
+    Point(-2,-1),
+    Point(-1,2),
+    Point(1,-2),
+    Point(-2,1),
+    Point(2,-1),
+    Point(1,2),
+    Point(-1,-2)
+}
+
+local function dir_rotate(dir, rev)
+    if rev then
+        dir = dir - 1
+        if dir == -1 then dir = 3 end
+    else
+        dir = dir + 1
+        if dir == 4 then dir = 0 end
+    end
+    return dir
+end
+
+function ffrg_Science_Accelerate:GetTargetArea(point)
+    local ret = PointList()
+    for _, mod in ipairs(FFRG_PUSHERS) do
+        local curr = point+mod
+        if Board:IsValid(curr) then ret:push_back(curr) end
+    end
+    return ret
+end
+
+function ffrg_Science_Accelerate:GetSkillEffect(p1,p2)
+    local ret = SkillEffect()
+    local damages = {}
+    for i = DIR_START, DIR_END do
+        local curr = p1 + DIR_VECTORS[i]
+        local damage
+        if Board:IsPawnTeam(curr,TEAM_PLAYER) then
+            damage = ffrg_ActionsPlus.AccelerateDamage(curr)
+        else
+            damage = SpaceDamage(curr,0)
+        end
+        local rev = false
+        local change = p2 - p1
+        for i, mod in ipairs(FFRG_PUSHERS) do
+            if mod == change then
+                if i > 4 then
+                    rev = true
+                else
+                    rev = false
+                end
+            end
+        end
+        dir = dir_rotate(GetDirection(curr-p1),rev)
+        if self.Force == 1 then
+            damage.iPush = dir
+        else
+            damage.iPush = 5
+            ffrg_Shove.Shove(curr, dir, self.Force, {ret = ret, mode = "simple", standard_anim = false, delay = 0.1})
+        end
+        damage.sAnimation = self.Animation..dir
+        table.insert(damages,damage)
+    end
+    ret:AddDelay(0.1)
+    if self.SelfAccelerate then
+        accelerate = ffrg_ActionsPlus.AccelerateDamage(p1)
+        ret:AddDamage(accelerate)
+    end
+    for _, damage in ipairs(damages) do
+        ret:AddDamage(damage)
+    end
+    return ret
+end
+
+
+---------------
+-- Overclock --
+---------------
+
+ffrg_Support_Overclock = Skill:new{
+    Name = "Overclock",
+    Description = "Overclock self or an adjacent ally.",
+    Class = "",
+    Icon = "weapons/ffrg_support_overclock.png",
+    Boost = false,
+    Limited = 2,
+    PowerCost = 1,
+    TwoClick = true,
+    Upgrades = 1,
+    UpgradeCost = {2},
+    TipImage = {
+        Unit = Point(2,3),
+        Friendly = Point(2,2),
+        Target = Point(2,2),
+        Second_Click = Point(2,2),
+        Length = 3.5
+    }
+}
+
+ffrg_Support_Overclock_A = ffrg_Support_Overclock:new{
+    UpgradeDescription = "Boosts the targeted unit.",
+    Boost = true
+}
+
+Weapon_Texts.ffrg_Support_Overclock_Upgrade1 = "Add Boost"
+
+function ffrg_Support_Overclock:GetTargetArea(point)
+    local ret = PointList()
+    ret:push_back(point)
+    for i = 0, 3 do
+        local curr = point+DIR_VECTORS[i]
+        if Board:IsValid(curr) and Board:IsPawnSpace(curr) and Board:GetPawn(curr):GetTeam() == TEAM_PLAYER then
+            ret:push_back(curr)
+        end
+    end
+    return ret
+end
+
+function ffrg_Support_Overclock:GetSkillEffect(p1,p2)
+    local ret = SkillEffect()
+    local pawn
+    if p1 == p2 then pawn = Pawn
+    else pawn = Board:GetPawn(p2)
+    end
+    local id = pawn:GetId()
+    local damage = ffrg_ActionsPlus.OverclockDamage(p2,{self_force = true})
+    if self.Boost then
+        local boost = ( true and not pawn:IsBoosted() ) or false
+        if p1 == p2 then boost = true end
+        local overclock = ( true and ( not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 ) ) or false
+        if p1 == p2 and GAME.ffrg_OverclockedData[id] and GAME.ffrg_OverclockedData[id].stage == 2 then overclock = true end
+        if boost and overclock then
+            damage.sImageMark = "combat/icons/ffrg_icon_overboost_glow.png"
+        elseif boost then
+            damage.sImageMark = "combat/icons/ffrg_icon_overboost_miss.png"
+        elseif overclock then
+            damage.sImageMark = "combat/icons/ffrg_icon_overboost_glance.png"
+        else
+            damage.sImageMark = "combat/icons/ffrg_icon_overboost_fail.png"
+        end
+        ret:AddDamage(damage)
+        ret:AddDelay(0.3)
+        if boost then
+            ret:AddScript("Board:GetPawn("..id.."):SetBoosted(true)")
+        end
+    else
+        ret:AddDamage(damage)
+    end
+    return ret
+end
+
+function ffrg_Support_Overclock:IsTwoClickException(p1,p2)
+    local pawn
+    if p1 == p2 then pawn = Pawn
+    else pawn = Board:GetPawn(p2)
+    end
+    local id = pawn:GetId()
+    if self.Boost and not pawn:IsBoosted() then return true end
+    if not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 then return true end
+    if p1 == p2 and GAME.ffrg_OverclockedData[id].stage == 2 then return true end
+    return false
+end
+
+function ffrg_Support_Overclock:GetSecondTargetArea(p1,p2) -- Auto-fail to prevent usages that do nothing
+    local ret = PointList()
+    return ret
+end
+
+function ffrg_Support_Overclock:GetFinalEffect(p1,p2,p3) -- Shouldn't trigger but here for redundancy
+    local ret = SkillEffect()
+    return ret
+end
 
 ---------------------
 -- Ionic Batteries --
@@ -790,6 +1168,9 @@ local function ffrg_GenerateAcidShield(pawn)
     if pawn:IsAcid() then
         pawn:SetAcid(false)
     end
+    if pawn:IsInfected() then
+        pawn:SetInfected(false)
+    end
 end
 
 local function ffrg_onPawnClassInitialized(pawnClass, pawnInstance) -- For instances of SetAcid()
@@ -810,15 +1191,36 @@ for i = 1, 8 do
 end
 local ffrg_AcidThresholds = {}
 
-local function ffrg_onResetTurn()
-    for i = 1, 8 do
-        for j = 1, 8 do
-            ffrg_AcidTracking[i][j] = 0
+local function ffrg_AcidTrackingClear()
+    if IsPassiveSkill("ffrg_Passive_AcidShield") then
+        for i = 1, 8 do
+            for j = 1, 8 do
+                ffrg_AcidTracking[i][j] = 0
+            end
         end
     end
 end
-modapiext.events.onResetTurn:subscribe(ffrg_onResetTurn)
 
+local function ffrg_onResetTurn()
+    ffrg_AcidTrackingClear()
+end
+local function ffrg_onMissionStart(mission)
+    ffrg_AcidTrackingClear()
+end
+local function ffrg_onMissionEnd(mission)
+    ffrg_AcidTrackingClear()
+end
+local function ffrg_onTestMechEntered(mission)
+    ffrg_AcidTrackingClear()
+end
+local function ffrg_onTestMechExited(mission)
+    ffrg_AcidTrackingClear()
+end
+modApi.events.onMissionStart:subscribe(ffrg_onMissionEnd)
+modApi.events.onMissionEnd:subscribe(ffrg_onMissionEnd)
+modApi.events.onTestMechEntered:subscribe(ffrg_onTestMechEntered)
+modApi.events.onTestMechExited:subscribe(ffrg_onTestMechExited)
+modapiext.events.onResetTurn:subscribe(ffrg_onResetTurn)
 
 local time_past
 local function ffrg_onMissionUpdate(mission) -- For instances of being moved onto acidifying tiles. Also consumes acid pools through shields.
@@ -919,6 +1321,9 @@ local function ffrg_AcidTag(skillEffect, queued)
                     if not pawn:IsShield() then
                         pawn:SetShield(true)
                         Board:DamageSpace(SoundEffect(Point(-1,-1),"props/shield_activated"))
+                    end
+                    if pawn:IsInfected() then
+                        pawn:SetInfected(false)
                     end
                     pawn:SetAcid(false)
                     local space = pawn:GetSpace()

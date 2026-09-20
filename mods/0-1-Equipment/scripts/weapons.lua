@@ -23,6 +23,12 @@ local path = mod_loader.mods[modApi.currentMod].resourcePath
 local imagePath = path .."img/"
 
 local files = {
+    "weapons/ffrg_prime_heavyshove.png",
+    "weapons/ffrg_prime_overdriveleap.png",
+    "weapons/ffrg_brute_overdrivecharge.png",
+    "weapons/ffrg_science_TC_multishove.png",
+    "weapons/ffrg_support_overdrivemove.png",
+    "weapons/ffrg_support_overdrivebash.png",
     "effects/ffrg_explo_palmswipe_U.png",
     "effects/ffrg_explo_palmswipe_D.png",
     "effects/ffrg_explo_palmswipe_L.png",
@@ -38,9 +44,7 @@ local files = {
     "effects/ffrg_explo_rake_L_1.png",
     "effects/ffrg_explo_rake_L_2.png",
     "effects/ffrg_explo_rake_R_1.png",
-    "effects/ffrg_explo_rake_R_2.png",
-    "weapons/ffrg_prime_heavyshove.png",
-    "weapons/ffrg_science_TC_multishove.png"
+    "effects/ffrg_explo_rake_R_2.png"
 }
 
 -- Unused (Probably for Pneumatic Pincers?) --
@@ -356,6 +360,236 @@ function ffrg_Science_TC_MultiShove:GetFinalEffect(p1, p2, p3)
         ret:AddDamage(anim)
     end
 
+	return ret
+end
+
+
+--------------------
+-- Overdrive Line --
+--------------------
+
+ffrg_Prime_OverdriveLeap = Skill:new{
+    Name = "Overdrive Leap",
+    Description = "Leap to a tile within range. Overclock self.",
+    Class = "Prime",
+    Icon = "weapons/ffrg_prime_overdriveleap.png",
+    LaunchSound = "weapons/leap",
+    LandSound = "impact/generic/mech",
+    Range = 3,
+    Limited = 1,
+    Upgrades = 2,
+    UpgradeCost = {1,2},
+    TipImage = {
+        Unit = Point(2,3),
+        Target = Point(2,1),
+        Length = 5
+    }
+}
+ffrg_Prime_OverdriveLeap_A = ffrg_Prime_OverdriveLeap:new{
+    UpgradeDescription = "Remove the restriction on range.",
+    Range = 7,
+    TipImage = {
+        Unit = Point(2,4),
+        Target = Point(2,0),
+        Length = 5
+    }
+}
+ffrg_Prime_OverdriveLeap_B = ffrg_Prime_OverdriveLeap:new{
+    UpgradeDescription = "Increases uses per battle by 1.",
+    Limited = 2
+}
+ffrg_Prime_OverdriveLeap_AB = ffrg_Prime_OverdriveLeap:new{
+    Range = 7,
+    Limited = 2,
+    TipImage = {
+        Unit = Point(2,4),
+        Target = Point(2,0),
+        Length = 5
+    }
+}
+Weapon_Texts.ffrg_Prime_OverdriveLeap_Upgrade1 = "Unlimited Range"
+Weapon_Texts.ffrg_Prime_OverdriveLeap_Upgrade2 = "+1 Use"
+function ffrg_Prime_OverdriveLeap:GetTargetArea(point)
+	local ret = PointList()
+	for i = DIR_START, DIR_END do
+		for k = 1, self.Range do
+			local curr = DIR_VECTORS[i]*k + point
+			if not Board:IsValid(curr) then
+				break
+			end
+			if not Board:IsBlocked(curr,Pawn:GetPathProf()) then
+                ret:push_back(curr)
+            end
+		end
+	end
+
+	return ret
+end
+function ffrg_Prime_OverdriveLeap:GetSkillEffect(p1,p2)
+	local ret = SkillEffect()
+	local leap = PointList()
+    leap:push_back(p1)
+    leap:push_back(p2)
+    local overclock = ffrg_ActionsPlus.OverclockDamage(p1,{self_force = true})
+    overclock.loc = p2
+    ret:AddBounce(p1,-2)
+    ret:AddBurst(p1,"Emitter_Burst_$tile",DIR_NONE)
+    ret:AddLeap(leap,FULL_DELAY)
+    ret:AddBounce(p2,2)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.LandSound))
+    ret:AddDelay(0.1)
+    ret:AddDamage(overclock)
+	return ret
+end
+
+ffrg_Brute_OverdriveCharge = Skill:new{
+    Name = "Overdrive Charge",
+    Description = "Charge to a tile. Overclock self.",
+    Class = "Brute",
+    Icon = "weapons/ffrg_brute_overdrivecharge.png",
+    LaunchSound = "/weapons/charge",
+    Limited = 1,
+    Upgrades = 1,
+    UpgradeCost = {2},
+    TipImage = {
+        Unit = Point(2,3),
+        Target = Point(2,1)
+    }
+}
+ffrg_Brute_OverdriveCharge_A = ffrg_Brute_OverdriveCharge:new{
+    UpgradeDescription = "Increases uses per battle by 1.",
+    Limited = 2
+}
+Weapon_Texts.ffrg_Brute_OverdriveCharge_Upgrade1 = "+1 Use"
+function ffrg_Brute_OverdriveCharge:GetTargetArea(point)
+	local ret = PointList()
+	for i = DIR_START, DIR_END do
+		for k = 1, 7 do
+			local curr = DIR_VECTORS[i]*k + point
+			if not Board:IsValid(curr) then
+				break
+			end
+			if not Board:IsBlocked(curr,Pawn:GetPathProf()) then
+                ret:push_back(curr)
+            else
+                break
+            end
+		end
+	end
+
+	return ret
+end
+function ffrg_Brute_OverdriveCharge:GetSkillEffect(p1,p2)
+	local ret = SkillEffect()
+    local direction = GetDirection(p2-p1)
+    local distance = p1:Manhattan(p2)
+	local charge = PointList()
+    for i = 0, distance do
+        local curr = p1 + (DIR_VECTORS[direction]*i)
+        charge:push_back(curr)
+    end
+    local overclock = ffrg_ActionsPlus.OverclockDamage(p1,{self_force = true})
+    overclock.loc = p2
+    ret:AddCharge(charge,NO_DELAY)
+    for i = 1, distance do
+        local curr = p1 + (DIR_VECTORS[direction]*(i-1))
+        ret:AddBounce(curr,-1)
+        ret:AddDelay(0.06)
+    end
+    ret:AddDelay(0.1)
+    ret:AddDamage(overclock)
+	return ret
+end
+
+ffrg_Support_OverdriveMove = Skill:new{
+    Name = "Overdrive Scuttle",
+    Description = "Move to a tile within distance. Overclock self.",
+    Class = "",
+    Icon = "weapons/ffrg_support_overdrivemove.png",
+    Limited = 1,
+    Movement = 2,
+    Upgrades = 2,
+    UpgradeCost = {1,2},
+    TipImage = {
+        Unit = Point(2,3),
+        Target = Point(2,1)
+    }
+}
+ffrg_Support_OverdriveMove_A = ffrg_Support_OverdriveMove:new{
+    UpgradeDescription = "Increases movement range by 2.",
+    Movement = 4,
+    TipImage = {
+        Unit = Point(3,3),
+        Target = Point(1,1)
+    }
+}
+ffrg_Support_OverdriveMove_B = ffrg_Support_OverdriveMove:new{
+    UpgradeDescription = "Increases uses per battle by 1.",
+    Limited = 2
+}
+ffrg_Support_OverdriveMove_AB = ffrg_Support_OverdriveMove:new{
+    Limited = 2,
+    Movement = 4,
+    TipImage = {
+        Unit = Point(3,3),
+        Target = Point(1,1)
+    }
+}
+Weapon_Texts.ffrg_Support_OverdriveMove_Upgrade1 = "+2 Move"
+Weapon_Texts.ffrg_Support_OverdriveMove_Upgrade2 = "+1 Use"
+function ffrg_Support_OverdriveMove:GetTargetArea(point)
+	return Board:GetReachable(point, self.Movement, Pawn:GetPathProf())
+end
+function ffrg_Support_OverdriveMove:GetSkillEffect(p1,p2)
+	local ret = SkillEffect()
+    local overclock = ffrg_ActionsPlus.OverclockDamage(p1,{self_force = true})
+    overclock.loc = p2
+    ret:AddMove(Board:GetPath(p1, p2, Pawn:GetPathProf()), FULL_DELAY)
+    ret:AddDelay(0.1)
+    ret:AddDamage(overclock)
+	return ret
+end
+
+ffrg_Support_OverdriveBash = Skill:new{
+    Name = "Overdrive Bash",
+    Description = "Flip an adjacent tile. Overclock self.",
+    Class = "",
+    Icon = "weapons/ffrg_support_overdrivebash.png",
+    LaunchSound = "/weapons/shield_bash",
+    Animation = "SwipeClaw1",
+    Limited = 1,
+    Upgrades = 1,
+    UpgradeCost = {2},
+    TipImage = {
+        Unit = Point(2,3),
+        Enemy = Point(2,2),
+        Target = Point(2,2)
+    }
+}
+ffrg_Support_OverdriveBash_A = ffrg_Support_OverdriveBash:new{
+    UpgradeDescription = "Increases uses per battle by 1.",
+    Limited = 2
+}
+Weapon_Texts.ffrg_Support_OverdriveBash_Upgrade1 = "+1 Use"
+function ffrg_Support_OverdriveBash:GetTargetArea(point)
+	local ret = PointList()
+	for i = DIR_START, DIR_END do
+        local curr = DIR_VECTORS[i] + point
+        if Board:IsValid(curr) then
+            ret:push_back(curr)
+        end
+	end
+
+	return ret
+end
+function ffrg_Support_OverdriveBash:GetSkillEffect(p1,p2)
+	local ret = SkillEffect()
+    local damage = SpaceDamage(p2,0,DIR_FLIP)
+    damage.sAnimation = self.Animation
+    local overclock = ffrg_ActionsPlus.OverclockDamage(p1,{self_force = true})
+    ret:AddMelee(p1,damage,NO_DELAY)
+    ret:AddDelay(0.2)
+    ret:AddDamage(overclock)
 	return ret
 end
 
