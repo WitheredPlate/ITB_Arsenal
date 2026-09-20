@@ -1,7 +1,7 @@
 local mod = {
 	id = "ffrg_arsenal_squads",
 	name = "",
-	description = "-- Squads --\n\nIntroduces new playable Squads, in addition to their accompanying pieces of Equipment.\n\nSquads:\n - Bile Drinkers\n\nEquipment:\n [Prime]\n  - Body Slam\n [Brute]\n  - Cell Cannon\n [Ranged]\n  - Caustic Shells\n [Passive]\n  - Ionic Batteries\n",
+	description = "-- Squads --\n\nIntroduces new playable Squads, in addition to their accompanying pieces of Equipment.\n\nSquads:\n - Bile Drinkers\n\nEquipment:\n [Prime]\n  - Body Slam\n [Brute]\n  - Cell Cannon\n [Ranged]\n  - Caustic Shells\n [Support]\n  - Overclock\n [Passive]\n  - Ionic Batteries\n",
 	modApiVersion = "2.8.3",
 	version = ffrg_arsenal_version,
 	gameVersion = "1.2.83",
@@ -14,7 +14,8 @@ function mod:init()
 	require(self.scriptPath .."pawns")
 	modApi:addWeaponDrop("ffrg_Prime_KO_BodySlam")
 	modApi:addWeaponDrop("ffrg_Brute_SplitShot")
-	modApi:addWeaponDrop("ffrg_Ranged_Caustic")
+	modApi:addWeaponDrop("ffrg_Ranged_TC_Caustic")
+	modApi:addWeaponDrop("ffrg_Support_Overclock")
 	modApi:addWeaponDrop("ffrg_Passive_AcidShield")
 end
 
