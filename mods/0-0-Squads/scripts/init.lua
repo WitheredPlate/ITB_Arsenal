@@ -16,6 +16,7 @@ function mod:init()
 	modApi:addWeaponDrop{id = "ffrg_Brute_SplitShot", pod = false, shop = "advanced"}
 	modApi:addWeaponDrop{id = "ffrg_Brute_ShoveCharge", pod = false, shop = "advanced"}
 	modApi:addWeaponDrop{id = "ffrg_Ranged_TC_Caustic", pod = false, shop = "advanced"}
+	modApi:addWeaponDrop{id = "ffrg_Ranged_TC_ChainShot", pod = false, shop = "advanced"}
 	modApi:addWeaponDrop{id = "ffrg_Science_Accelerate", pod = false, shop = "advanced"}
 	modApi:addWeaponDrop{id = "ffrg_Support_Overclock", pod = false, shop = "advanced"}
 	modApi:addWeaponDrop{id = "ffrg_Passive_AcidShield", pod = false, shop = "advanced"}
