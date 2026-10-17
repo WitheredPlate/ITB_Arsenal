@@ -579,28 +579,20 @@ return {
 -- Arsenal --
 -------------
 
-	Mech_Push = {
-		"",
-		"",
-		"",
-		""
-	},
-	Mech_Shove = {
-		"",
-		""
-	},
-	Mech_Flip = {
-		"",
-		"",
-		""
+	Vek_Flip = {
+		"That Vek can't make heads or tails of anything.",
+		"Vek's disoriented",
+		"Looks like that Vek got concussed."
 	},
 	Mech_Accelerate = {
-		"",
-		""
+		"My engine's outputting far more than it should. I like the sound of that.",
+		"Drive frame shouldn't handle this, but it is and I am not complaining.",
+		"Fuel injectors pushing nitro now."
 	},
 	Mech_Overclock = {
-		"",
-		""
+		"Augurs in conflict. Trying to correct now.",
+		"Cycling bay running at peak capacity.",
+		"Ejection channels operating on high. I guess it's just my kind of day."
 	}
 }
 

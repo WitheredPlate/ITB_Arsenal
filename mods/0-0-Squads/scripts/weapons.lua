@@ -5,11 +5,16 @@
 --== Prime ==--
 -- Body Slam
 
---== Prime ==--
+--== Brute ==--
 -- Cell Cannon
+-- Blasted Wake
 
 --== Ranged ==--
 -- Caustic Shells
+-- Chain Shot
+
+--== Science ==--
+-- Boundary Vortex
 
 --== Support ==--
 -- Overclock
@@ -36,6 +41,7 @@ local files = {
     "weapons/ffrg_brute_splitshot.png",
     "weapons/ffrg_brute_shovecharge.png",
     "weapons/ffrg_ranged_TC_caustic.png",
+    "weapons/ffrg_ranged_TC_chainshot.png",
     "weapons/ffrg_science_accelerate.png",
     "weapons/ffrg_support_overclock.png",
     "weapons/ffrg_passive_acidshield.png",
@@ -62,6 +68,26 @@ local files = {
     "effects/ffrg_explo_pushmelt_D.png",
     "effects/ffrg_explo_pushmelt_L.png",
     "effects/ffrg_shotup_acid.png",
+    "effects/ffrg_shotup_chainshot_0_0.png",
+    "effects/ffrg_shotup_chainshot_0_1.png",
+    "effects/ffrg_shotup_chainshot_1_0.png",
+    "effects/ffrg_shotup_chainshot_1_1.png",
+    "effects/ffrg_shadup_chainshot_0_0.png",
+    "effects/ffrg_shadup_chainshot_0_1.png",
+    "effects/ffrg_shadup_chainshot_1_0.png",
+    "effects/ffrg_shadup_chainshot_1_1.png",
+    "effects/ffrg_explo_cannonball.png",
+    "effects/ffrg_explo_cannonchain_0.png",
+    "effects/ffrg_explo_cannonchain_1.png",
+    "effects/ffrg_explo_chainwhip_0_0.png",
+    "effects/ffrg_explo_chainwhip_0_1.png",
+    "effects/ffrg_explo_chainwhip_0_2.png",
+    "effects/ffrg_explo_chainwhip_0_3.png",
+    "effects/ffrg_explo_chainwhip_1_0.png",
+    "effects/ffrg_explo_chainwhip_1_1.png",
+    "effects/ffrg_explo_chainwhip_1_2.png",
+    "effects/ffrg_explo_chainwhip_1_3.png",
+    "effects/ffrg_cannonball_fall.png",
     "effects/ffrg_body_slam_move_down.png",
     "effects/ffrg_body_slam_move_up.png",
     "effects/ffrg_body_slam_move_left.png",
@@ -253,6 +279,109 @@ ANIMS.ffrg_ExploMelt_3 = ANIMS.ffrg_ExploMelt_0:new{
     PosX = -37
 }
 
+-- Chain Shot --
+ANIMS.ffrg_Explo_Cannonball = Animation:new{
+    Image = "effects/ffrg_explo_cannonball.png",
+    PosX = -26,
+    PosY = 7,
+    NumFrames = 12,
+    Time = 0.08,
+    Loop = false
+}
+ANIMS.ffrg_Cannonball_Fall = Animation:new{
+    Image = "effects/ffrg_cannonball_fall.png",
+    PosX = -10,
+    PosY = 13,
+    NumFrames = 6,
+    Layer = ANIMS.LAYER_FLOOR,
+    Time = 0.035,
+    Loop = false
+}
+ANIMS.ffrg_Explo_CannonChain_0 = Animation:new{
+    Image = "effects/ffrg_explo_cannonchain_0.png",
+    PosX = -24,
+    PosY = 2,
+    NumFrames = 6,
+    Time = 0.08,
+    Loop = false
+}
+ANIMS.ffrg_Explo_CannonChain_1 = ANIMS.ffrg_Explo_CannonChain_0:new{
+    Image = "effects/ffrg_explo_cannonchain_1.png",
+}
+ANIMS.ffrg_Explo_ChainWhip_0_0 = Animation:new{
+    Image = "effects/ffrg_explo_chainwhip_0_0.png",
+    PosX = -19,
+    PosY = -14,
+    NumFrames = 11,
+    Layer = ANIMS.LAYER_FRONT,
+    Time = 0.03,
+    Loop = false
+}
+ANIMS.ffrg_Explo_ChainWhip_0_1 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_0_1.png",
+    PosY = 3,
+    PosX = -18
+}
+ANIMS.ffrg_Explo_ChainWhip_0_2 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_0_2.png",
+    PosY = 1,
+    PosX = -32
+}
+ANIMS.ffrg_Explo_ChainWhip_0_3 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_0_3.png",
+    PosY = -7,
+    PosX = -42
+}
+ANIMS.ffrg_Explo_ChainWhip_1_0 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_1_0.png",
+    PosY = -7,
+    PosX = -18
+}
+ANIMS.ffrg_Explo_ChainWhip_1_1 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_1_1.png",
+    PosY = 1
+}
+ANIMS.ffrg_Explo_ChainWhip_1_2 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_1_2.png",
+    PosY = 3,
+    PosX = -42
+}
+ANIMS.ffrg_Explo_ChainWhip_1_3 = ANIMS.ffrg_Explo_ChainWhip_0_0:new{
+    Image = "effects/ffrg_explo_chainwhip_1_3.png",
+    PosX = -32
+}
+ANIMS.ffrg_ShotUp_ChainShot_0_0 = Animation:new{
+    Image = "effects/ffrg_shotup_chainshot_0_0.png",
+    NumFrames = 17,
+    Frames = { 2,   3,   0,   1,   2,   3,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  9,   10,  11,  12,  13,  14},
+    Lengths = {.025,.025,.025,.025,.025,.025,.025,.025,.025,.025,.03, .03, .04, .05, .05, .05, .05, .05, .06, .06, .06, .06, .06, .06, .06, .06, .06, .06, 1},
+    PosX = -54,
+    PosY = -24,
+    Loop = false
+}
+ANIMS.ffrg_ShotUp_ChainShot_0_1 = ANIMS.ffrg_ShotUp_ChainShot_0_0:new{
+    Image = "effects/ffrg_shotup_chainshot_0_1.png",
+    PosY = -21
+}
+ANIMS.ffrg_ShotUp_ChainShot_1_0 = ANIMS.ffrg_ShotUp_ChainShot_0_0:new{
+    Image = "effects/ffrg_shotup_chainshot_1_0.png",
+    PosY = -21
+}
+ANIMS.ffrg_ShotUp_ChainShot_1_1 = ANIMS.ffrg_ShotUp_ChainShot_0_0:new{
+    Image = "effects/ffrg_shotup_chainshot_1_1.png"
+}
+ANIMS.ffrg_ShadUp_ChainShot_0_0 = ANIMS.ffrg_ShotUp_ChainShot_0_0:new{
+    Image = "effects/ffrg_shadup_chainshot_0_0.png"
+}
+ANIMS.ffrg_ShadUp_ChainShot_0_1 = ANIMS.ffrg_ShotUp_ChainShot_0_1:new{
+    Image = "effects/ffrg_shadup_chainshot_0_1.png"
+}
+ANIMS.ffrg_ShadUp_ChainShot_1_0 = ANIMS.ffrg_ShotUp_ChainShot_1_0:new{
+    Image = "effects/ffrg_shadup_chainshot_1_0.png"
+}
+ANIMS.ffrg_ShadUp_ChainShot_1_1 = ANIMS.ffrg_ShotUp_ChainShot_1_1:new{
+    Image = "effects/ffrg_shadup_chainshot_1_1.png"
+}
 
 --////////////////////////////////--
 
@@ -417,7 +546,7 @@ function ffrg_Prime_KO_BodySlam:GetSkillEffect(p1, p2)
             local curr = p2 + DIR_VECTORS[i]
             if curr ~= p1 then
                 local direction = GetDirection(curr - p2)
-                ffrg_Shove.Shove(curr, direction, self.Force, {ret = ret, mode = "simple", delay = 0.6})
+                ffrg_Shove.Shove(curr, direction, self.Force, {ret = ret, mode = "simple", delay = 0.6, origin = p1})
             end
         end
     end
@@ -655,7 +784,7 @@ end
 
 ffrg_Brute_ShoveCharge = Skill:new{
     Name = "Blasted Wake",
-    Description = "Charge forwards and stop, shoving the next tile forwards with the force of the charge.",
+    Description = "Charge forwards and stop, shoving forwards with the force of the charge.",
     Class = "Brute",
     Icon = "weapons/ffrg_brute_shovecharge.png",
     LaunchSound = "/support/train/move",
@@ -678,7 +807,7 @@ ffrg_Brute_ShoveCharge_A = ffrg_Brute_ShoveCharge:new{
     Range = 5
 }
 ffrg_Brute_ShoveCharge_B = ffrg_Brute_ShoveCharge:new{
-    UpgradeDescription = "Adds fire to the targeted tile.",
+    UpgradeDescription = "Adds Fire to the targeted tile.",
     Fire = true,
     WakeSound2 = "props/forest_fire"
 }
@@ -708,6 +837,13 @@ function ffrg_Brute_ShoveCharge:GetTargetArea(point)
 	return ret
 end
 
+local function isHazardousTerrain(terrain,massive)
+    if terrain == TERRAIN_HOLE then return true end
+    if not massive then
+        if terrain == TERRAIN_WATER or terrain == TERRAIN_LAVA then return true end
+    end
+end
+
 function ffrg_Brute_ShoveCharge:GetSkillEffect(p1,p2)
     local ret = SkillEffect()
     local distance = p1:Manhattan(p2)
@@ -724,7 +860,7 @@ function ffrg_Brute_ShoveCharge:GetSkillEffect(p1,p2)
             blast.iPush = 5
             local sDelay = 0.06*(distance+2)
             if distance < 3 then sDelay = sDelay + (0.03*(2-distance)) end
-            ffrg_Shove.Shove(blastTile, direction, distance, {ret = ret, mode = "simple", delay = sDelay})
+            ffrg_Shove.Shove(blastTile, direction, distance, {ret = ret, mode = "simple", delay = sDelay, origin = p1})
         end
         if self.Fire then blast.iFire = 1 end
         blast.sSound = self.WakeSound
@@ -746,6 +882,27 @@ function ffrg_Brute_ShoveCharge:GetSkillEffect(p1,p2)
         ret:AddBounce(blastTile,math.max(-3,(distance)*-1))
         if self.WakeSound2 ~= "" then
             ret:AddDamage(SoundEffect(Point(-1,-1),self.WakeSound2))
+        end
+    end
+    if distance == 3 and Board:IsPawnSpace(blastTile) and Board:IsPawnTeam(blastTile,TEAM_ENEMY) then
+        local pawn = Board:GetPawn(blastTile)
+        if not pawn:IsFlying() then
+            local complete = true
+            local massive = pawn:IsMassive()
+            for i = 1, 2 do
+                local curr = blastTile+(DIR_VECTORS[direction]*i)
+                if not Board:IsValid(curr) then complete = false break end
+                if Board:IsBlocked(curr, PATH_FLYER) then complete = false break end
+                local terrain = Board:GetTerrain(curr)
+                if isHazardousTerrain(terrain,massive) then complete = false break end
+            end
+            if complete then
+                curr = blastTile+DIR_VECTORS[direction]*3
+                if Board:IsValid(curr) then
+                    local terrain = Board:GetTerrain(curr)
+                    if isHazardousTerrain(terrain,massive) then ret:AddScript("ffrg_Ardent_GolfGet()") end
+                end
+            end
         end
     end
     return ret
@@ -905,6 +1062,220 @@ function ffrg_Ranged_TC_Caustic:GetFinalEffect(p1, p2, p3)
 end
 
 
+----------------
+-- Chain Shot --
+----------------
+
+ffrg_Ranged_TC_ChainShot = LineArtillery:new{
+    Name = "Chain Shot",
+    Description = "Launch an artillery that damages three tiles in a line while damaging and rotating the tile behind the user.",
+    Class = "Ranged",
+    Icon = "weapons/ffrg_ranged_TC_chainshot.png",
+    ArtilleryAnimation = "ffrg_ShotUp_ChainShot_",
+    ShadowAnimation = "ffrg_ShadUp_ChainShot_",
+    BackAnimation = "ffrg_Explo_ChainWhip_",
+    CenterAnimation = "ffrg_Explo_CannonChain_",
+    EdgeAnimation = "ffrg_Explo_Cannonball",
+    EdgeHoleAnimation = "ffrg_Cannonball_Fall",
+    Explosion = "",
+    BackSound = "enemy/beetle_1/attack_impact",
+    FireSound = "weapons/ranged_arachnoid",
+    WhooshSound = "/props/boulder_fall",
+    HitSound = "/impact/dynamic/rock",
+    BuildingImmune = false,
+    TwoClick = true,
+    Damage = 1,
+    Upgrades = 2,
+    UpgradeCost = {1,3},
+    TipImage = {
+        Unit = Point(2,3),
+        Enemy1 = Point(2,4),
+        Enemy2 = Point(3,1),
+        Enemy3 = Point(2,1),
+        Target = Point(2,1),
+        Second_Click = Point(3,4),
+        Length = 5
+    }
+}
+
+ffrg_Ranged_TC_ChainShot_A = ffrg_Ranged_TC_ChainShot:new{
+    UpgradeDescription = "Buildings will no longer take damage from this attack.",
+    BuildingImmune = true,
+    TipImage = {
+        Unit = Point(2,3),
+        Enemy1 = Point(2,4),
+        Enemy2 = Point(2,1),
+        Building = Point(3,1),
+        Target = Point(2,1),
+        Second_Click = Point(3,4),
+        Length = 5
+    }
+}
+ffrg_Ranged_TC_ChainShot_B = ffrg_Ranged_TC_ChainShot:new{
+    UpgradeDescription = "Increases damage by 1.",
+    Damage = 2,
+}
+ffrg_Ranged_TC_ChainShot_AB = ffrg_Ranged_TC_ChainShot:new{
+    BuildingImmune = true,
+    Damage = 2,
+    TipImage = {
+        Unit = Point(2,3),
+        Enemy1 = Point(2,4),
+        Enemy2 = Point(2,1),
+        Building = Point(3,1),
+        Target = Point(2,1),
+        Second_Click = Point(3,4),
+        Length = 5
+    }
+}
+
+Weapon_Texts.ffrg_Ranged_TC_ChainShot_Upgrade1 = "Buildings Immune"
+Weapon_Texts.ffrg_Ranged_TC_ChainShot_Upgrade2 = "+1 Damage"
+
+local function ttrg_DirRotate(dir, rot)
+    if rot == 1 then
+        return (dir + 1)%4
+    elseif dir == 0 then
+        return 3
+    else
+        return dir - 1
+    end
+end
+
+function ffrg_CustomProjectile_ChainShotHeightMap(portion)
+    return (1-(((2*portion)-1)^2))*72
+end
+
+function ffrg_Ranged_TC_ChainShot:GetSkillEffect(p1, p2)
+    local ret = SkillEffect()
+    local rot = math.random(0,1)
+    local dir = GetDirection(p2-p1)
+    local backSpace = p1-DIR_VECTORS[dir]
+    if Board:IsValid(backSpace) then
+        local back = ffrg_Rotate.RotateDamage(backSpace, 1, {damage = self.Damage, icon = false})
+        if self.BuildingImmune and Board:IsBuilding(backSpace) then back.iDamage = DAMAGE_ZERO end
+        ret:AddDamage(back)
+    end
+    local dirLim = dir
+    if dirLim > 1 then dirLim = dirLim - 2 end
+    ffrg_CustomProjectile.AddCustomArtillery(p1,p2,self.ArtilleryAnimation..rot.."_"..dirLim,{duration = 1.2, ret = ret, path = true, directional = false, height_map = "ffrg_CustomProjectile_ChainShotHeightMap", shadow = false, custom_shadow = self.ShadowAnimation..rot.."_"..dirLim})
+    ret:AddBounce(p1,2)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.FireSound))
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.WhooshSound))
+    ret:AddDelay(1.2)
+    for rot2 = 0, 1 do
+        local curr = p2+DIR_VECTORS[ttrg_DirRotate(dir,rot2)]
+        if Board:IsValid(curr) then
+            local damage = SpaceDamage(curr,self.Damage)
+            if self.BuildingImmune and Board:IsBuilding(curr) then damage.iDamage = DAMAGE_ZERO end
+            damage.sAnimation = self.EdgeAnimation
+            if not Board:IsBlocked(curr,PATH_FLYER) then
+                local terrain = Board:GetTerrain(curr)
+                if terrain == TERRAIN_WATER then
+                    if Board:IsAcid(curr) then
+                        damage.sAnimation = "Splash_acid"
+                    else
+                        damage.sAnimation = "Splash"
+                    end
+                elseif terrain == TERRAIN_LAVA then damage.sAnimation = "Splash_lava"
+                elseif terrain == TERRAIN_HOLE then damage.sAnimation = self.EdgeHoleAnimation end
+            end
+            ret:AddDamage(damage)
+            ret:AddBounce(curr,1)
+        end
+    end
+    local damage = SpaceDamage(p2,self.Damage)
+    if self.BuildingImmune and Board:IsBuilding(p2) then damage.iDamage = DAMAGE_ZERO end
+    damage.loc = p2
+    damage.sSound = self.HitSound
+    damage.sAnimation = self.CenterAnimation..dirLim
+    ret:AddDamage(damage)
+    return ret
+end
+
+function ffrg_Ranged_TC_ChainShot:IsTwoClickException(p1, p2)
+    if not Board:IsValid(p1-DIR_VECTORS[GetDirection(p2-p1)]) then return true end
+    return false
+end
+
+function ffrg_Ranged_TC_ChainShot:GetSecondTargetArea(p1, p2)
+    local ret = PointList()
+    local dir = GetDirection(p2-p1)
+
+    local curr = p1-DIR_VECTORS[dir]
+    for rot = 0, 1 do
+        local curr2 = curr+DIR_VECTORS[ttrg_DirRotate(dir,rot)]
+        if Board:IsValid(curr2) then
+            ret:push_back(curr2)
+        else
+            ret:push_back(curr)
+        end
+    end
+
+    return ret
+end
+
+function ffrg_Ranged_TC_ChainShot:GetFinalEffect(p1, p2, p3)
+    local ret = SkillEffect()
+    local rot = 0
+    local dir = GetDirection(p2-p1)
+    local backSpace = p1-DIR_VECTORS[dir]
+    local offset = backSpace-p3
+    if offset == Point(1,0) or offset == Point(0,-1) then rot = 1 end
+    if offset == Point(0,0) then
+        if dir == 0 or dir == 2 then
+            if Board:IsValid(backSpace+Point(1,0)) then rot = 1 end
+        else
+            if Board:IsValid(backSpace+Point(0,-1)) then rot = 1 end
+        end
+    end
+    local back = ffrg_Rotate.RotateDamage(backSpace, rot, {damage = self.Damage})
+    if self.BuildingImmune and Board:IsBuilding(backSpace) then back.iDamage = DAMAGE_ZERO end
+    back.sSound = self.BackSound
+    local damage = SpaceDamage(p2,self.Damage)
+    ret:AddScript("Board:AddAnimation("..backSpace:GetString()..",\""..self.BackAnimation..rot.."_"..dir.."\",1)")
+    ret:AddDelay(0.1)
+    ret:AddDamage(back)
+    ret:AddDelay(0.15)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.FireSound))
+    local dirLim = dir
+    if dirLim > 1 then dirLim = dirLim - 2 end
+    local rotLim = math.abs(rot-1)
+    ffrg_CustomProjectile.AddCustomArtillery(p1,p2,self.ArtilleryAnimation..rotLim.."_"..dirLim,{duration = 1.2, ret = ret, path = true, directional = false, height_map = "ffrg_CustomProjectile_ChainShotHeightMap", shadow = false, custom_shadow = self.ShadowAnimation..rotLim.."_"..dirLim})
+    ret:AddBounce(p1,2)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.WhooshSound))
+    ret:AddDelay(1.2)
+    for rot2 = 0, 1 do
+        local curr = p2+DIR_VECTORS[ttrg_DirRotate(dir,rot2)]
+        if Board:IsValid(curr) then
+            local damage = SpaceDamage(curr, self.Damage)
+            if self.BuildingImmune and Board:IsBuilding(curr) then damage.iDamage = DAMAGE_ZERO end
+            damage.sAnimation = self.EdgeAnimation
+            if not Board:IsBlocked(curr,PATH_FLYER) then
+                local terrain = Board:GetTerrain(curr)
+                if terrain == TERRAIN_WATER then
+                    if Board:IsAcid(curr) then
+                        damage.sAnimation = "Splash_acid"
+                    else
+                        damage.sAnimation = "Splash"
+                    end
+                elseif terrain == TERRAIN_LAVA then damage.sAnimation = "Splash_lava"
+                elseif terrain == TERRAIN_HOLE then damage.sAnimation = self.EdgeHoleAnimation end
+            end
+            ret:AddDamage(damage)
+            ret:AddBounce(curr,1)
+        end
+    end
+    local damage = SpaceDamage(p2,self.Damage)
+    if self.BuildingImmune and Board:IsBuilding(p2) then damage.iDamage = DAMAGE_ZERO end
+    damage.loc = p2
+    damage.sSound = self.HitSound
+    damage.sAnimation = self.CenterAnimation..dirLim
+    ret:AddDamage(damage)
+    return ret
+end
+
+
 ---------------------
 -- Boundary Vortex --
 ---------------------
@@ -923,10 +1294,9 @@ ffrg_Science_Accelerate = Skill:new{
     TipImage = {
         Unit = Point(2,2),
         Enemy1 = Point(2,1),
-        Enemy2 = Point(3,2),
-        Friendly = Point(2,3),
-        Target = Point(1,0),
-        Length = 4.5
+        Enemy2 = Point(2,3),
+        Friendly = Point(3,2),
+        Target = Point(1,0)
     }
 }
 
@@ -1006,12 +1376,13 @@ function ffrg_Science_Accelerate:GetSkillEffect(p1,p2)
             damage.iPush = dir
         else
             damage.iPush = 5
-            ffrg_Shove.Shove(curr, dir, self.Force, {ret = ret, mode = "simple", standard_anim = false, delay = 0.1})
+            ffrg_Shove.Shove(curr, dir, self.Force, {ret = ret, mode = "simple", standard_anim = false, delay = 0.1, origin = p1})
         end
         damage.sAnimation = self.Animation..dir
         table.insert(damages,damage)
     end
     ret:AddDelay(0.1)
+    ret:AddBounce(p1,-1)
     if self.SelfAccelerate then
         accelerate = ffrg_ActionsPlus.AccelerateDamage(p1)
         ret:AddDamage(accelerate)

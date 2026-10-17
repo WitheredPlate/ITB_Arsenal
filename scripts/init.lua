@@ -1,9 +1,9 @@
-ffrg_arsenal_version = "0.1.2 Alpha"
+ffrg_arsenal_version = "0.2.0 Beta"
 
 local mod = {
     id = "ffrg_arsenal",
     name = "",
-    description = "-- Arsenal --\n\nA content pack that implements multi-tile Shoving.\n\nBy WitheredPlate\n",
+    description = "-- Arsenal --\n\nA content pack that implements multi-tile Shoving, Rotating, and action-altering Statuses.\n\nBy WitheredPlate\n",
     version = ffrg_arsenal_version,
     modApiVersion = "2.8.3",
     gameVersion = "1.2.83",
@@ -16,15 +16,21 @@ local mod = {
     load = function() end
 }
 local libs = {
+    "globals",
     "tipTracker",
     "trait",
     --"pawnSight",
+    "effectBurst",
     "seriousDamage/seriousDamage",
     "actions+/actions+",
+    "spawnController",
+    "customProjectile/customProjectile",
     "weaponPreview",
     "queuedPreview",
     "worldConstants",
+    "customPsion",
     "shove/shove",
+    "rotate/rotate",
 }
 -- local templates = {
 --     "",

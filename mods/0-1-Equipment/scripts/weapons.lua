@@ -26,6 +26,7 @@ local files = {
     "weapons/ffrg_prime_heavyshove.png",
     "weapons/ffrg_prime_overdriveleap.png",
     "weapons/ffrg_brute_overdrivecharge.png",
+    "weapons/ffrg_ranged_TC_net.png",
     "weapons/ffrg_science_TC_multishove.png",
     "weapons/ffrg_support_overdrivemove.png",
     "weapons/ffrg_support_overdrivebash.png",
@@ -44,7 +45,13 @@ local files = {
     "effects/ffrg_explo_rake_L_1.png",
     "effects/ffrg_explo_rake_L_2.png",
     "effects/ffrg_explo_rake_R_1.png",
-    "effects/ffrg_explo_rake_R_2.png"
+    "effects/ffrg_explo_rake_R_2.png",
+    "effects/ffrg_explo_net_0.png",
+    "effects/ffrg_explo_net_1.png",
+    "effects/ffrg_shotup_net_0.png",
+    "effects/ffrg_shotup_net_1.png",
+    "effects/ffrg_shadup_net_0.png",
+    "effects/ffrg_shadup_net_1.png"
 }
 
 -- Unused (Probably for Pneumatic Pincers?) --
@@ -89,6 +96,43 @@ ANIMS.ffrg_Explo_Saturn_2 = ANIMS.ffrg_Explo_Saturn_0:new{
 ANIMS.ffrg_Explo_Saturn_3 = ANIMS.ffrg_Explo_Saturn_0:new{
     Image = "effects/ffrg_explo_saturn_L.png",
     PosX = -48
+}
+
+-- Net Caster --
+ANIMS.ffrg_Explo_Net_0 = Animation:new{
+    Image = "effects/ffrg_explo_net_0.png",
+    NumFrames = 5,
+    Time = 0.08,
+    PosX = -35,
+    PosY = -16
+}
+ANIMS.ffrg_Explo_Net_1 = ANIMS.ffrg_Explo_Net_0:new{
+    Image = "effects/ffrg_explo_net_1.png",
+    PosX = -37,
+}
+ANIMS.ffrg_ShotUp_Net_0 = Animation:new{
+    Image = "effects/ffrg_shotup_net_0.png",
+    NumFrames = 12,
+    Frames = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,4,5,6,7,8,9,10,11,8,9,10,11,8},
+    Lengths = {0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.04,0.06,0.07,0.07,0.07,0.07,0.08,0.08,0.09,0.09,0.09,0.1,1},
+    PosX = -47,
+    PosY = -16,
+    Loop = false
+}
+ANIMS.ffrg_ShotUp_Net_1 = ANIMS.ffrg_ShotUp_Net_0:new{
+    Image = "effects/ffrg_shotup_net_1.png",
+}
+ANIMS.ffrg_ShadUp_Net_1 = Animation:new{
+    Image = "effects/ffrg_shadup_net_1.png",
+    NumFrames = 9,
+    Frames = {0,1,2,3,4,5,6,7,8,5,6,7,8,5},
+    Lengths = {0.48,0.04,0.06,0.07,0.07,0.07,0.07,0.08,0.08,0.09,0.09,0.09,0.1,1},
+    PosX = -38,
+    PosY = -7,
+    Loop = false
+}
+ANIMS.ffrg_ShadUp_Net_0 = ANIMS.ffrg_ShadUp_Net_1:new{
+    Image = "effects/ffrg_shadup_net_0.png",
 }
 
 -- Force Rake --
@@ -180,7 +224,7 @@ function ffrg_Prime_HeavyShove:GetSkillEffect(p1, p2)
     local direction = GetDirection(p2 - p1)
     local melee = SpaceDamage(p2,0)
     melee.bHide = true
-    ffrg_Shove.Shove(p2, direction, self.Force, {standard_anim = false, ret = ret, mode = "simple", delay = 0.27})
+    ffrg_Shove.Shove(p2, direction, self.Force, {standard_anim = false, ret = ret, mode = "simple", delay = 0.27, origin = p1})
     ret:AddScript("Board:AddAnimation("..p2:GetString()..",\""..self.Animation..direction.."\",1)")
     ret:AddDelay(0.2)
     ret:AddDamage(SoundEffect(Point(-1,-1),self.HitSound))
@@ -189,6 +233,140 @@ function ffrg_Prime_HeavyShove:GetSkillEffect(p1, p2)
     ret:AddMelee(p1, melee, NO_DELAY)
     ret:AddDelay(0.39)
     return ret
+end
+
+
+----------------
+-- Net Caster --
+----------------
+
+ffrg_Ranged_TC_Net = LineArtillery:new{
+    Name = "Net Caster",
+    Description = "Fire an artillery that rotates an area in either direction.",
+    Class = "Ranged",
+    Icon = "weapons/ffrg_ranged_TC_net.png",
+    LaunchSound = "weapons/ranged_arachnoid",
+    WhooshSound = "impact/generic/grapple",
+    HitSound = "impact/generic/general",
+    ArtilleryAnimation = "ffrg_ShotUp_Net_",
+    ShadowAnimation = "ffrg_ShadUp_Net_",
+    Explosion = "",
+    Animation = "ffrg_Explo_Net_",
+    AccelerateAlly = false,
+    TwoClick = true,
+    Upgrades = 1,
+    UpgradeCost = {2},
+    TipImage = {
+        Unit = Point(2,4),
+        Enemy = Point(2,1),
+        Enemy2 = Point(3,1),
+        Enemy3 = Point(2,0),
+        Target = Point(2,1),
+        Second_Click = Point(1,3),
+        Mountain = Point(2,3),
+        Length = 5
+    }
+}
+
+ffrg_Ranged_TC_Net_A = ffrg_Ranged_TC_Net:new{
+    UpgradeDescription = "Applies Acceleration when targeting allies.",
+    AccelerateAlly = true,
+    TipImage = {
+        Unit = Point(2,4),
+        Enemy = Point(2,1),
+        Enemy2 = Point(2,0),
+        Friendly = Point(3,1),
+        Target = Point(2,1),
+        Mountain = Point(2,3),
+        Second_Click = Point(1,3),
+        Length = 5
+    }
+}
+
+Weapon_Texts.ffrg_Ranged_TC_Net_Upgrade1 = "Accelerate Ally"
+
+function ffrg_Ranged_TC_Net:GetSkillEffect(p1, p2)
+    local ret = SkillEffect()
+    for i = DIR_START, DIR_END do
+        local curr = p2+DIR_VECTORS[i]
+        local damage
+        if self.AccelerateAlly and Board:IsPawnTeam(curr,TEAM_PLAYER) then
+            damage = ffrg_ActionsPlus.AccelerateDamage(curr)
+        else
+            damage = ffrg_Rotate.RotateDamage(curr, 1, {icon = false})
+        end
+        ret:AddDamage(damage)
+    end
+    local damage
+    if self.AccelerateAlly and Board:IsPawnTeam(p2,TEAM_PLAYER) then
+        damage = ffrg_ActionsPlus.AccelerateDamage(p2)
+    else
+        damage = ffrg_Rotate.RotateDamage(p2, 1, {icon = false})
+    end
+    ret:AddDamage(damage)
+    return ret
+end
+
+function ffrg_Ranged_TC_Net:GetSecondTargetArea(p1, p2)
+    local ret = PointList()
+
+    for _, i in ipairs({Point(1,2), Point(1,-2), Point(-1,2), Point(-1,-2), Point(2,1), Point(2,-1), Point(-2,1), Point(-2,-1)}) do
+        local curr = p2 + i
+        if Board:IsValid(curr) then
+            ret:push_back(curr)
+        end
+    end
+
+    return ret
+end
+
+function ffrg_CustomProjectile_NetCastHeightMap(portion)
+    return (1-(((2*portion)-1)^2))*72
+end
+
+function ffrg_Ranged_TC_Net:GetFinalEffect(p1, p2, p3)
+    local ret = SkillEffect()
+    local rot = 0
+    if p3 - p2 == Point(1,2) or p3 - p2 == Point(-1,-2) or p3 - p2 == Point(2,-1) or p3 - p2 == Point(-2,1) then
+        rot = 1
+    end
+    ret:AddBounce(p1,2)
+    ffrg_CustomProjectile.AddCustomArtillery(p1,p2,self.ArtilleryAnimation..rot,{duration = 1.43, ret = ret, path = true, directional = false, height_map = "ffrg_CustomProjectile_NetCastHeightMap", shadow = false, custom_shadow = self.ShadowAnimation..rot})
+    ret:AddDelay(0.48)
+    ret:AddDamage(SoundEffect(Point(-1,-1),self.WhooshSound))
+    ret:AddDelay(0.95)
+    for i = DIR_START, DIR_END do
+        local curr = p2+DIR_VECTORS[i]
+        local damage
+        if self.AccelerateAlly and Board:IsPawnTeam(curr,TEAM_PLAYER) then
+            damage = ffrg_ActionsPlus.AccelerateDamage(curr)
+        else
+            damage = ffrg_Rotate.RotateDamage(curr, rot)
+        end
+        damage.sSound = self.HitSound
+        ret:AddDamage(damage)
+        ret:AddBounce(curr,1)
+    end
+    local damage
+    if self.AccelerateAlly and Board:IsPawnTeam(p2,TEAM_PLAYER) then
+        damage = ffrg_ActionsPlus.AccelerateDamage(p2)
+    else
+        damage = ffrg_Rotate.RotateDamage(p2, rot)
+    end
+    damage.sSound = self.HitSound
+    damage.sAnimation = self.Animation..rot
+    ret:AddDamage(damage)
+    ret:AddBounce(p2,1)
+    return ret
+end
+
+
+--------------------
+-- Helios Bombard --
+--------------------
+
+function ffrg_CustomProjectile_HeliosHeightMap(portion)
+    return (1-((2.5*portion-1)^2)+((1.75*portion)^4.2))*54
 end
 
 
@@ -345,7 +523,7 @@ function ffrg_Science_TC_MultiShove:GetFinalEffect(p1, p2, p3)
     end
     for i = 1, distance do
         local curr = p1+DIR_VECTORS[direction]*i
-        ffrg_Shove.Shove(curr, rotated, self.Force, {ret = ret, mode = "simple", delay = ffrg_Science_TC_MultiShove_delays[i]})
+        ffrg_Shove.Shove(curr, rotated, self.Force, {ret = ret, mode = "simple", delay = ffrg_Science_TC_MultiShove_delays[i], origin = p1})
     end
     ret:AddDelay(0.1)
     for i = 1, distance do

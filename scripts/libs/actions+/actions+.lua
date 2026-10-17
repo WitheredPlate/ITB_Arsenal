@@ -290,12 +290,17 @@ for i,v in pairs(Mission) do
                     aToggle = false
                     if GAME.ffrg_OverclockedData then
                         for id, data in pairs(GAME.ffrg_OverclockedData) do
-                            if data.stage == 2 then data.stage = 1 end
+                            if data.stage == 2 then
+                                data.stage = 1
+                            end
                         end
                     end
                     if GAME.ffrg_AcceleratedData then
                         for id, data in pairs(GAME.ffrg_AcceleratedData) do
-                            if data.stage == 2 then data.stage = 1 end
+                            if data.stage == 2 then
+                                data.stage = 1
+                                data.bonused = false
+                            end
                         end
                     end
 				end
@@ -331,7 +336,7 @@ local function ffrg_OverclockDamage(point, config)
         local pawn = Board:GetPawn(point)
         id = pawn:GetId()
         local team = pawn:GetTeam()
-        if team == TEAM_PLAYER and ( not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 ) then miss = false end
+        if team == TEAM_PLAYER and pawn:GetWeaponCount() > 0 and ( Board:IsTipImage() or not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 ) then miss = false end
     end
     if miss then
         damage.sImageMark = "combat/icons/icon_overclock_miss.png"
@@ -354,7 +359,7 @@ local function ffrg_AccelerateDamage(point, config)
         local pawn = Board:GetPawn(point)
         id = pawn:GetId()
         local team = pawn:GetTeam()
-        if team == TEAM_PLAYER and ( not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 ) then miss = false end
+        if team == TEAM_PLAYER and pawn:GetMoveSpeed() > 0 and ( Board:IsTipImage() or not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 ) then miss = false end
     end
     if miss then
         damage.sImageMark = "combat/icons/icon_accelerate_miss.png"
@@ -374,9 +379,12 @@ local function ffrg_Overclock(pawn, isOverclock, config)
         config.self_force = config.self_force or false
         if config.fx == nil then config.fx = true end
         if isOverclock == nil then isOverclock = true end
-        GAME.ffrg_OverclockedData = GAME.ffrg_OverclockedData or {}
+        if not Board:IsTipImage() then
+            GAME.ffrg_OverclockedData = GAME.ffrg_OverclockedData or {}
+        end
         if isOverclock then
-            if not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 or ( config.self_force and GAME.ffrg_OverclockedData[id].stage == 2 ) then
+            if Board:IsTipImage() or not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 or ( config.self_force and GAME.ffrg_OverclockedData[id].stage == 2 ) then
+                ffrg_ActionsPlus.events.onPawnIsOverclocked:dispatch(GetCurrentMission(), pawn, true)
                 if not Board:IsTipImage() then
                     GAME.ffrg_OverclockedData[id] = {stage = config.stage, timer = config.timer, stagger = false, bonus_pings = 0, halo_timer = 0, buffer = 0}
                 end
@@ -391,8 +399,11 @@ local function ffrg_Overclock(pawn, isOverclock, config)
             end
         else
             if config.fx and GAME.ffrg_OverclockedData[id] then
+                ffrg_ActionsPlus.events.onPawnIsOverclocked:dispatch(GetCurrentMission(), pawn, false)
                 Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/map/map_ping_big"))
-                GAME.ffrg_OverclockedData[id] = nil
+                if not Board:IsTipImage() then
+                    GAME.ffrg_OverclockedData[id] = nil
+                end
             end
         end
     end
@@ -405,9 +416,12 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
         config.timer = config.timer or 1.2
         if config.fx == nil then config.fx = true end
         if isAccelerate == nil then isAccelerate = true end
-        GAME.ffrg_AcceleratedData = GAME.ffrg_AcceleratedData or {}
+        if not Board:IsTipImage() then
+            GAME.ffrg_AcceleratedData = GAME.ffrg_AcceleratedData or {}
+        end
         if isAccelerate then
-            if not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 then
+            if Board:IsTipImage() or not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 then
+                ffrg_ActionsPlus.events.onPawnIsAccelerated:dispatch(GetCurrentMission(), pawn, true)
                 if not Board:IsTipImage() then
                     GAME.ffrg_AcceleratedData[id] = {stage = config.stage, timer = config.timer, bonus_pings = 0, halo_timer = 0, bonused = false, buffer = 0}
                 end
@@ -422,8 +436,11 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
             end
         else
             if config.fx and GAME.ffrg_AcceleratedData[id] then
+                ffrg_ActionsPlus.events.onPawnIsAccelerated:dispatch(GetCurrentMission(), pawn, false)
                 Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/map/map_ping_big"))
-                GAME.ffrg_AcceleratedData[id] = nil
+                if not Board:IsTipImage() then
+                    GAME.ffrg_AcceleratedData[id] = nil
+                end
             end
         end
     end
@@ -787,6 +804,9 @@ local function initialize()
     ffrg_ActionsPlus.OverclockDamage = ffrg_OverclockDamage
     ffrg_ActionsPlus.Accelerate = ffrg_Accelerate
     ffrg_ActionsPlus.AccelerateDamage = ffrg_AccelerateDamage
+    ffrg_ActionsPlus.events = {}
+    ffrg_ActionsPlus.events.onPawnIsOverclocked = Event()
+    ffrg_ActionsPlus.events.onPawnIsAccelerated = Event()
 end
 
 if ffrg_ActionsPlus then

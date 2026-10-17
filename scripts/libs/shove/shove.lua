@@ -350,6 +350,8 @@ local function ffrg_ShoveCharge(p1, p2, speed, impact_damage, anim, delay, letha
         if id then
             charger:AddScript("Board:GetPawn("..id.."):SetSpace("..backspace:GetString()..")")
         end
+        charger:AddScript("if Board and not Board:IsTipImage() then ffrg_Shove.events.onShoveBumpDamage:dispatch(GetCurrentMission(),"..p2:GetString()..","..impact_damage..") end")
+        charger:AddScript("if Board and not Board:IsTipImage() then ffrg_Shove.events.onShoveBumpDamage:dispatch(GetCurrentMission(),"..backspace:GetString()..","..impact_damage..") end")
         charger:AddScript("ffrg_SeriousDamage.InflictSeriousDamage("..impact_damage..","..p2:GetString()..",{force = true, type = \"bump\"})")
         charger:AddScript("ffrg_SeriousDamage.InflictSeriousDamage("..impact_damage..","..backspace:GetString()..",{force = true, type = \"bump\"})")
     end
@@ -422,8 +424,14 @@ local function ffrg_ApplyShove(point, dir, force, config)
             if config.ret and config.mode ~= "instant" then
                 config.ret:AddScript("ffrg_Shove.ShoveCharge("..point:GetString()..","..final:GetString()..","..speed..","..impact_damage..","..tostring(config.standard_anim)..","..config.delay..","..tostring(lethal_terrain)..")")
                 if impact_damage > 0 then
-                    ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,final,{type = "bump", force = true, preview = true})
-                    ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,point,{type = "bump", force = true, preview = true})
+                    if config.origin and Board:IsPawnSpace(config.origin) then
+                        local pawn2 = Board:GetPawn(config.origin)
+                        ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,final,{type = "bump", force = true, preview = true, uprootData = {pawn2:GetId(),pawn2:GetArmedWeapon(),pawn2:GetArmedWeaponId()}})
+                        ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,point,{type = "bump", force = true, preview = true, uprootData = {pawn2:GetId(),pawn2:GetArmedWeapon(),pawn2:GetArmedWeaponId()}})
+                    else
+                        ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,final,{type = "bump", force = true, preview = true})
+                        ffrg_SeriousDamage.AppendSeriousDamage(config.ret,impact_damage,point,{type = "bump", force = true, preview = true})
+                    end
                 end
             elseif config.mode == "instant" then
                 ffrg_ShoveCharge(point, final, speed, impact_damage, config.standard_anim, config.delay)
@@ -522,6 +530,8 @@ local function initialize()
     ffrg_Shove.ReQueue = ffrg_ReQueue
     ffrg_Shove.FORCE_DEATH = FORCE_DEATH
     ffrg_Shove.Version = VERSION
+    ffrg_Shove.events = {}
+    ffrg_Shove.events.onShoveBumpDamage = Event()
 end
 
 if ffrg_Shove then
