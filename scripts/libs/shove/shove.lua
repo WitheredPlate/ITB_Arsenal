@@ -389,7 +389,7 @@ local function ffrg_ShoveAnim(point, dir, speed, delay, anim_type)
 end
 
 
-local function ffrg_ShoveCharge(p1, p2, speed, impact_damage, anim, delay, lethal_terrain)
+local function ffrg_ShoveCharge(p1, p2, speed, impact_damage, delay, anim_type, lethal_terrain)
     local charger = SkillEffect()
     local charge = PointList()
     local dir = GetDirection(p2-p1)
@@ -411,8 +411,8 @@ local function ffrg_ShoveCharge(p1, p2, speed, impact_damage, anim, delay, letha
     end
     local fx = SpaceDamage(p1,0)
     fx.sSound = "/enemy/shared/moved"
-    if anim then
-        fx.sAnimation = "ffrg_airshove"..speed.."_"..dir
+    if anim_type ~= "" then
+        fx.sAnimation = "ffrg_"..anim_type.."shove"..speed.."_"..dir
     end
     charger:AddDamage(fx)
     ffrg_WorldConstants:setSpeed(charger,(speed+6)*0.04)
@@ -507,7 +507,7 @@ local function ffrg_ApplyShove(point, dir, force, config)
         if type == "" or type == "kill" or type == "impact" or ( type == "miss" and travelled > 0 ) then
             local final = point + DIR_VECTORS[dir]*travelled
             if config.ret and config.mode ~= "instant" then
-                config.ret:AddScript("ttrg_Shove.ShoveCharge("..point:GetString()..","..final:GetString()..","..speed..","..impact_damage..",\""..config.standard_anim.."\","..config.delay..","..tostring(lethal_terrain)..")")
+                config.ret:AddScript("ttrg_Shove.ShoveCharge("..point:GetString()..","..final:GetString()..","..speed..","..impact_damage..","..config.delay..",\""..config.standard_anim.."\","..tostring(lethal_terrain)..")")
                 for _, bouncer in ipairs(config.bounce_data) do
                     if bouncer.bounce and bouncer.bounce_type and bouncer.bounce ~= 0 then
                         config.ret:AddScript("ttrg_Shove.ShoveBounce("..point:GetString()..","..final:GetString()..","..speed..","..config.delay..","..bouncer.bounce..",\""..bouncer.bounce_type.."\")")
@@ -524,7 +524,7 @@ local function ffrg_ApplyShove(point, dir, force, config)
                     end
                 end
             elseif config.mode == "instant" then
-                ffrg_ShoveCharge(point, final, speed, impact_damage, config.standard_anim, config.delay)
+                ffrg_ShoveCharge(point, final, speed, impact_damage, config.delay, config.standard_anim)
                 for _, bouncer in ipairs(config.bounce_data) do
                     if bouncer.bounce and bouncer.bounce_type and bouncer.bounce > 0 then
                         ffrg_ShoveBounce(point, final, speed, config.delay, bouncer.bounce, bouncer.bounce_type)
@@ -533,7 +533,7 @@ local function ffrg_ApplyShove(point, dir, force, config)
             end
         else
             if config.ret and config.mode ~= "instant" then
-                if config.standard_anim ~= "" then config.ret:AddScript("ttrg_Shove.ShoveAnim("..point:GetString()..","..dir..","..speed..","..config.delay..","..config.standard_anim..")") end
+                if config.standard_anim ~= "" then config.ret:AddScript("ttrg_Shove.ShoveAnim("..point:GetString()..","..dir..","..speed..","..config.delay..",\""..config.standard_anim.."\")") end
                 for _, bouncer in ipairs(config.bounce_data) do
                     if bouncer.bounce and bouncer.bounce_type and bouncer.bounce_type == "single" and bouncer.bounce ~= 0 then
                         config.ret:AddScript("ttrg_Shove.ShoveBounce("..point:GetString()..",nil,"..speed..","..config.delay..","..bouncer.bounce..",\""..bouncer.bounce_type.."\")")

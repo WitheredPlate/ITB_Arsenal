@@ -324,7 +324,6 @@ ffrg_ArchonMech = Pawn:new{
     Class = "Prime",
     Health = 3,
     MoveSpeed = 3,
-    SelfHeal = true,
     Image = "ffrg_mech_archon",
     ImageOffset = bilePalette,
     SkillList = { "ffrg_Prime_KO_BodySlam" },
@@ -335,6 +334,14 @@ ffrg_ArchonMech = Pawn:new{
     Massive = true,
     LargeShield = true,
 }
+
+-- ffrg_Traitor.AddTrait(
+--     "pawn_type",
+--     "ffrg_ArchonMech",
+--     "Postmortal",
+--     "This unit will create a Shell on this tile upon death.",
+--     ""
+-- )
 
 -------------------
 -- Splitter Mech --

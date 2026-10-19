@@ -297,7 +297,7 @@ function ffrg_Prime_HeavyShove:GetSkillEffect(p1, p2)
     local direction = GetDirection(p2 - p1)
     local melee = SpaceDamage(p2,0)
     melee.bHide = true
-    ffrg_Shove.Shove(p2, direction, self.Force, {standard_anim = false, ret = ret, mode = "simple", delay = 0.27, origin = p1, bounce_data = {{bounce_type = "single", bounce = -3},{bounce_type = "trail_2", bounce = -2}}})
+    ffrg_Shove.Shove(p2, direction, self.Force, {ret = ret, mode = "simple", delay = 0.27, origin = p1, bounce_data = {{bounce_type = "single", bounce = -3},{bounce_type = "trail_2", bounce = -2}}})
     ret:AddScript("Board:AddAnimation("..p2:GetString()..",\""..self.Animation..direction.."\",1)")
     ret:AddDelay(0.2)
     ret:AddDamage(SoundEffect(Point(-1,-1),self.HitSound))
@@ -596,7 +596,7 @@ function ffrg_Science_TC_MultiShove:GetFinalEffect(p1, p2, p3)
     end
     for i = 1, distance do
         local curr = p1+DIR_VECTORS[direction]*i
-        ffrg_Shove.Shove(curr, rotated, self.Force, {ret = ret, mode = "simple", delay = ffrg_Science_TC_MultiShove_delays[i], origin = p1})
+        ffrg_Shove.Shove(curr, rotated, self.Force, {standard_anim = "air", ret = ret, mode = "simple", delay = ffrg_Science_TC_MultiShove_delays[i], origin = p1})
     end
     ret:AddDelay(0.1)
     for i = 1, distance do

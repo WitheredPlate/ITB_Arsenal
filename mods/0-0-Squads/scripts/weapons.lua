@@ -546,7 +546,7 @@ function ffrg_Prime_KO_BodySlam:GetSkillEffect(p1, p2)
             local curr = p2 + DIR_VECTORS[i]
             if curr ~= p1 then
                 local direction = GetDirection(curr - p2)
-                ffrg_Shove.Shove(curr, direction, self.Force, {ret = ret, mode = "simple", delay = 0.6, origin = p1})
+                ffrg_Shove.Shove(curr, direction, self.Force, {standard_anim = "air", ret = ret, mode = "simple", delay = 0.6, origin = p1})
             end
         end
     end
@@ -860,7 +860,7 @@ function ffrg_Brute_ShoveCharge:GetSkillEffect(p1,p2)
             blast.iPush = 5
             local sDelay = 0.06*(distance+2)
             if distance < 3 then sDelay = sDelay + (0.03*(2-distance)) end
-            ffrg_Shove.Shove(blastTile, direction, distance, {ret = ret, mode = "simple", delay = sDelay, origin = p1})
+            ffrg_Shove.Shove(blastTile, direction, distance, {standard_anim = "air", ret = ret, mode = "simple", delay = sDelay, origin = p1})
         end
         if self.Fire then blast.iFire = 1 end
         blast.sSound = self.WakeSound
@@ -1376,7 +1376,7 @@ function ffrg_Science_Accelerate:GetSkillEffect(p1,p2)
             damage.iPush = dir
         else
             damage.iPush = 5
-            ffrg_Shove.Shove(curr, dir, self.Force, {ret = ret, mode = "simple", standard_anim = false, delay = 0.1, origin = p1})
+            ffrg_Shove.Shove(curr, dir, self.Force, {ret = ret, mode = "simple", delay = 0.1, origin = p1})
         end
         damage.sAnimation = self.Animation..dir
         table.insert(damages,damage)
