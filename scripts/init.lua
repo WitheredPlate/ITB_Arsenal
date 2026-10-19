@@ -1,4 +1,4 @@
-ffrg_arsenal_version = "0.2.0 Beta"
+ffrg_arsenal_version = "0.2.1 Beta"
 
 local mod = {
     id = "ffrg_arsenal",
