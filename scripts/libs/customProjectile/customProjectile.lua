@@ -438,7 +438,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_CustomProjectile or ( modApi:isVersion(ffrg_CustomProjectile.Version, VERSION) and ffrg_CustomProjectile.version ~= VERSION ) then
+if not ffrg_CustomProjectile or ( modApi:isVersion(ffrg_CustomProjectile.version, VERSION) and ffrg_CustomProjectile.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_CustomProjectile = ffrg_CustomProjectile or {}
  --[[     Version    ]] ffrg_CustomProjectile.version = VERSION

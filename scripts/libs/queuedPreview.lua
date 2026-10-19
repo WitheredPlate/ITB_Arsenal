@@ -259,7 +259,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_QueuedPreview or ( modApi:isVersion(ffrg_QueuedPreview.Version, VERSION) and ffrg_QueuedPreview.version ~= VERSION ) then
+if not ffrg_QueuedPreview or ( modApi:isVersion(ffrg_QueuedPreview.version, VERSION) and ffrg_QueuedPreview.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_QueuedPreview = ffrg_QueuedPreview or {}
  --[[     Version    ]] ffrg_QueuedPreview.version = VERSION

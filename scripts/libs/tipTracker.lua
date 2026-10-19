@@ -136,7 +136,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_TipTracker or ( modApi:isVersion(ffrg_TipTracker.Version, VERSION) and ffrg_TipTracker.version ~= VERSION ) then
+if not ffrg_TipTracker or ( modApi:isVersion(ffrg_TipTracker.version, VERSION) and ffrg_TipTracker.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_TipTracker = ffrg_TipTracker or {}
  --[[     Version    ]] ffrg_TipTracker.version = VERSION

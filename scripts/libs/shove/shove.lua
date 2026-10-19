@@ -628,7 +628,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_Shove or ( modApi:isVersion(ffrg_Shove.Version, VERSION) and ffrg_Shove.version ~= VERSION ) then
+if not ffrg_Shove or ( modApi:isVersion(ffrg_Shove.version, VERSION) and ffrg_Shove.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_Shove = ffrg_Shove or {}
  --[[     Version    ]] ffrg_Shove.version = VERSION

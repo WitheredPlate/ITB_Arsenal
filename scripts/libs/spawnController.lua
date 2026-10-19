@@ -152,7 +152,7 @@ local VERSION = "1.0.7"
 
 --## Use these names to reference the 5 vanilla exclusions, which are all basic exclusions.
 
-ffrg_ExclusionData = ffrg_ExclusionData or {
+local ffrg_ExclusionData = (ffrg_SpawnController and ffrg_SpawnController.ExclusionData) or {
 
   --        Identifier        = Index --                                  Description                                  --              Contents             --
   ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,9 +163,9 @@ ffrg_ExclusionData = ffrg_ExclusionData or {
              burrowers        =   4   --     Vek that have the Stable trait and burrow through the ground to travel    --             Burrowers             --
 }
 
-ffrg_ExclusionTails = ffrg_ExclusionTails or {}
+local ffrg_ExclusionTails = (ffrg_SpawnController and ffrg_SpawnController.ExclusionTails) or {}
 
-ffrg_BoomBotsBank = ffrg_BoomBotsBank or {}
+local ffrg_BoomBotsBank = (ffrg_SpawnController and ffrg_SpawnController.BoomBotsBank) or {}
 
 local function ttrg_ListRummage(list, element)
     for _, entity in ipairs(list) do
@@ -537,14 +537,22 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_SpawnController or ( modApi:isVersion(ffrg_SpawnController.Version, VERSION) and ffrg_SpawnController.version ~= VERSION ) then
+if not ffrg_SpawnController or ( modApi:isVersion(ffrg_SpawnController.version, VERSION) and ffrg_SpawnController.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_SpawnController = ffrg_SpawnController or {}
  --[[     Version    ]] ffrg_SpawnController.version = VERSION
  --[[ Initialization ]] ffrg_SpawnController.initialized = false
 
- --[[    Overseer    ]] ffrg_SpawnController.events = {}
- --[[      Event     ]] ffrg_SpawnController.events.onTemplateEvent = Event()
+ --[[     Global     ]] ffrg_SpawnController.ExclusionData = ffrg_ExclusionData
+ --[[     Global     ]] ffrg_SpawnController.ExclusionTails = ffrg_ExclusionTails
+ --[[     Global     ]] ffrg_SpawnController.BoomBotsBank = ffrg_BoomBotsBank
+ --[[     Global     ]] ffrg_SpawnController.AppendSpawner = ffrg_AppendSpawner
+ --[[     Global     ]] ffrg_SpawnController.AppendBoomBots = ffrg_AppendBoomBots
+ --[[     Global     ]] ffrg_SpawnController.AppendBasicExclusion = ffrg_AppendBasicExclusion
+ --[[     Global     ]] ffrg_SpawnController.AddBasicExclusion = ffrg_AddBasicExclusion
+ --[[     Global     ]] ffrg_SpawnController.AppendMyriadExclusion = ffrg_AppendMyriadExclusion
+ --[[     Global     ]] ffrg_SpawnController.AddMyriadExclusion = ffrg_AddMyriadExclusion
+ --[[     Global     ]] ffrg_SpawnController.ExclusionTail = ffrg_ExclusionTail
 
 end
 local function ffrg_onModsInitialized()
@@ -553,13 +561,6 @@ if ffrg_SpawnController.version == VERSION and not ffrg_SpawnController.initiali
  --[[     Library    ]] ttrg_SpawnController = ttrg_SpawnController or {}
  --[[ Initialization ]] ffrg_SpawnController.initialized = true
 
- --[[     Global     ]] ffrg_SpawnController.AppendSpawner = ffrg_AppendSpawner
- --[[     Global     ]] ffrg_SpawnController.AppendBoomBots = ffrg_AppendBoomBots
- --[[     Global     ]] ffrg_SpawnController.AppendBasicExclusion = ffrg_AppendBasicExclusion
- --[[     Global     ]] ffrg_SpawnController.AddBasicExclusion = ffrg_AddBasicExclusion
- --[[     Global     ]] ffrg_SpawnController.AppendMyriadExclusion = ffrg_AppendMyriadExclusion
- --[[     Global     ]] ffrg_SpawnController.AddMyriadExclusion = ffrg_AddMyriadExclusion
- --[[     Global     ]] ffrg_SpawnController.ExclusionTail = ffrg_ExclusionTail
  --[[     Global     ]] ffrg_SpawnController.ListExclusions = ffrg_ListExclusions
 
  --[[   Alteration   ]] local temp_burrowers = {} for _, element in ipairs(exclusiveElements[4]) do if element ~= "Jelly_Explode" and element ~= "Mission_Acid" then table.insert(temp_burrowers, element) end end exclusiveElements[4] = temp_burrowers ffrg_ExclusionTail("burrowers", {"Jelly_Explode", "Mission_Acid"}, false)

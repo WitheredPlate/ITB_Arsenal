@@ -393,7 +393,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_CustomPsion or ( modApi:isVersion(ffrg_CustomPsion.Version, VERSION) and ffrg_CustomPsion.version ~= VERSION ) then
+if not ffrg_CustomPsion or ( modApi:isVersion(ffrg_CustomPsion.version, VERSION) and ffrg_CustomPsion.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_CustomPsion = ffrg_CustomPsion or {}
  --[[     Version    ]] ffrg_CustomPsion.version = VERSION
@@ -403,6 +403,8 @@ if not ffrg_CustomPsion or ( modApi:isVersion(ffrg_CustomPsion.Version, VERSION)
  --[[      Event     ]] ffrg_CustomPsion.events.onMutationLost = Event()
  --[[      Event     ]] ffrg_CustomPsion.events.onMutationGained = Event()
 
+ --[[     Global     ]] ffrg_CustomPsion.RegisterMutation = ffrg_RegisterMutation
+
 end
 local function ffrg_onModsInitialized()
 if ffrg_CustomPsion.version == VERSION and not ffrg_CustomPsion.initialized then
@@ -410,9 +412,7 @@ if ffrg_CustomPsion.version == VERSION and not ffrg_CustomPsion.initialized then
  --[[     Library    ]] ttrg_CustomPsion = ttrg_CustomPsion or {}
  --[[ Initialization ]] ffrg_CustomPsion.initialized = true
 
- --[[     Global     ]] ffrg_CustomPsion.RegisterMutation = ffrg_RegisterMutation
  --[[     Global     ]] ffrg_CustomPsion.GetMutated = ffrg_GetMutated
- --[[    Technical   ]] ttrg_CustomPsion.Technical = Technical
 
  --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
  --[[  Subscription  ]] modApi.events.onMissionChanged:subscribe(ffrg_onMissionChanged)

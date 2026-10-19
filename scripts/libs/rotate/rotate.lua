@@ -2,7 +2,7 @@
 --//            Title           //--
 --////////////////////////////////--
 
---        Template Library        --
+--        Rotation Library        --
 
 --##      By WitheredPlate      ##--
 
@@ -266,7 +266,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_Rotate or ( modApi:isVersion(ffrg_Rotate.Version, VERSION) and ffrg_Rotate.version ~= VERSION ) then
+if not ffrg_Rotate or ( modApi:isVersion(ffrg_Rotate.version, VERSION) and ffrg_Rotate.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_Rotate = ffrg_Rotate or {}
  --[[     Version    ]] ffrg_Rotate.version = VERSION

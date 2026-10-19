@@ -871,7 +871,7 @@ Traits:add({
 --////////////////////////////////--
 
 
-if not ffrg_ActionsPlus or ( modApi:isVersion(ffrg_ActionsPlus.Version, VERSION) and ffrg_ActionsPlus.version ~= VERSION ) then
+if not ffrg_ActionsPlus or ( modApi:isVersion(ffrg_ActionsPlus.version, VERSION) and ffrg_ActionsPlus.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_ActionsPlus = ffrg_ActionsPlus or {}
  --[[     Version    ]] ffrg_ActionsPlus.version = VERSION

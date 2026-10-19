@@ -432,7 +432,7 @@ end
 --////////////////////////////////--
 
 
-if not ffrg_SeriousDamage or ( modApi:isVersion(ffrg_SeriousDamage.Version, VERSION) and ffrg_SeriousDamage.version ~= VERSION ) then
+if not ffrg_SeriousDamage or ( modApi:isVersion(ffrg_SeriousDamage.version, VERSION) and ffrg_SeriousDamage.version ~= VERSION ) then
 
  --[[     Library    ]] ffrg_SeriousDamage = ffrg_SeriousDamage or {}
  --[[     Version    ]] ffrg_SeriousDamage.version = VERSION

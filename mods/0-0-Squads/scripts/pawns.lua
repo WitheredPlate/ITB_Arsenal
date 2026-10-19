@@ -324,6 +324,7 @@ ffrg_ArchonMech = Pawn:new{
     Class = "Prime",
     Health = 3,
     MoveSpeed = 3,
+    SelfHeal = true,
     Image = "ffrg_mech_archon",
     ImageOffset = bilePalette,
     SkillList = { "ffrg_Prime_KO_BodySlam" },
