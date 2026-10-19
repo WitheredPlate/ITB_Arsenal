@@ -11,7 +11,13 @@ local files = {
     "ffrg_Squad_Bile_3.png",
     "ffrg_Squad_Bile_1_Gray.png",
     "ffrg_Squad_Bile_2_Gray.png",
-    "ffrg_Squad_Bile_3_Gray.png"
+    "ffrg_Squad_Bile_3_Gray.png",
+    "ffrg_Squad_Ardent_1.png",
+    "ffrg_Squad_Ardent_2.png",
+    "ffrg_Squad_Ardent_3.png",
+    "ffrg_Squad_Ardent_1_Gray.png",
+    "ffrg_Squad_Ardent_2_Gray.png",
+    "ffrg_Squad_Ardent_3_Gray.png"
 }
 
 for _, file in ipairs(files) do

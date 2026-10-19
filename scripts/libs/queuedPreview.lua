@@ -21,7 +21,7 @@
 -- Description --
 -----------------
 
-local VERSION = "1.0.3"
+local VERSION = "1.0.4"
 
 --## A library for showing previewed additions to queued attacks. Supports alternatives for whether or not the attack is selected.
 --## This library can do certain things WeaponPreview can't for queued attacks and will catch certain bugs that WeaponPreview doesn't, but it is far less flexible, has more limitations, and is marginally harder to use.
@@ -259,30 +259,32 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_QueuedPreview.AddQueuedSet = ffrg_AddQueuedSet
-    ffrg_QueuedPreview.Version = VERSION
+if not ffrg_QueuedPreview or ( modApi:isVersion(ffrg_QueuedPreview.Version, VERSION) and ffrg_QueuedPreview.version ~= VERSION ) then
 
-    modapiext.events.onSkillBuild:subscribe(ffrg_onTargetAreaBuild)
-    modapiext.events.onFinalEffectBuild:subscribe(ffrg_onSecondTargetAreaBuild)
-    modapiext.events.onQueuedSkillStart:subscribe(ffrg_onQueuedSkillStart)
-    modapiext.events.onQueuedFinalEffectStart:subscribe(ffrg_onQueuedFinalEffectStart)
+ --[[     Library    ]] ffrg_QueuedPreview = ffrg_QueuedPreview or {}
+ --[[     Version    ]] ffrg_QueuedPreview.version = VERSION
+ --[[ Initialization ]] ffrg_QueuedPreview.initialized = false
 
-    modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
-    modApi.events.onFrameDrawStart:subscribe(ffrg_onFrameDrawStart)
-    modApi.events.onMissionStart:subscribe(ffrg_onMissionStart)
-    modApi.events.onNextTurn:subscribe(ffrg_onNextTurn)
 end
+local function ffrg_onModsInitialized()
+if ffrg_QueuedPreview.version == VERSION and not ffrg_QueuedPreview.initialized then
 
-if ffrg_QueuedPreview then
-    if modApi:isVersion(ffrg_QueuedPreview.Version, VERSION) and ffrg_QueuedPreview.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_QueuedPreview = ffrg_QueuedPreview or {}
-    initialize()
-end
+ --[[     Library    ]] ttrg_QueuedPreview = ttrg_QueuedPreview or {}
+ --[[ Initialization ]] ffrg_QueuedPreview.initialized = true
 
+ --[[     Global     ]] ffrg_QueuedPreview.AddQueuedSet = ffrg_AddQueuedSet
+
+ --[[  Subscription  ]] modapiext.events.onSkillBuild:subscribe(ffrg_onTargetAreaBuild)
+ --[[  Subscription  ]] modapiext.events.onFinalEffectBuild:subscribe(ffrg_onSecondTargetAreaBuild)
+ --[[  Subscription  ]] modapiext.events.onQueuedSkillStart:subscribe(ffrg_onQueuedSkillStart)
+ --[[  Subscription  ]] modapiext.events.onQueuedFinalEffectStart:subscribe(ffrg_onQueuedFinalEffectStart)
+ --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
+ --[[  Subscription  ]] modApi.events.onFrameDrawStart:subscribe(ffrg_onFrameDrawStart)
+ --[[  Subscription  ]] modApi.events.onMissionStart:subscribe(ffrg_onMissionStart)
+ --[[  Subscription  ]] modApi.events.onNextTurn:subscribe(ffrg_onNextTurn)
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_QueuedPreview
 
 

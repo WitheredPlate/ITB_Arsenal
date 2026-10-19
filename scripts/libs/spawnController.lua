@@ -21,7 +21,7 @@
 -- Description --
 -----------------
 
-local VERSION = "1.0.6"
+local VERSION = "1.0.7"
 
 --## A library of functions to control the vanilla data the game uses to control how, when, and how many different enemies appear.
 --## Mostly dedicated towards controlling exclusions, which prevent enemies and other elements from appearing with other enemies and elements.
@@ -87,7 +87,7 @@ local VERSION = "1.0.6"
 -----------------------
 
 --## ffrg_SpawnController.AppendSpawner
--- ( identifier [String],  weak [Boolean], max_pawns [Integer], flying [Boolean], max_level [Integer] )
+-- ( identifier [String],  weak [Boolean, optional], max_pawns [Integer, optional], flying [Boolean, optional], max_level [Integer, optional] )
 -- Sets the spawning data on the enemy specified by string to the specified data.
 -- Data elements may be identified as nil to indicate no value. Default values of false for the two booleans or 0 for the two integers will have the same effect.
 
@@ -123,7 +123,7 @@ local VERSION = "1.0.6"
 -- Accepts both single elements as a string or an array of said elements and does not add elements that are already present in the event of a behavior defaulting.
 
 --## ffrg_SpawnController.AddExclusionTail
--- ( identifier [String],  exclusion [Array or String],  myriad [Boolean] )
+-- ( identifier [String],  exclusion [Array or String],  myriad [Boolean, optional] )
 -- Creates a new exclusion tail or adds to an existing one for the specified identifier that can be referenced or appended to later.
 -- If no exclusion with the specified identifier exists, creates an empty exclusion with the specified identifier.
 -- The created exclusion is of myriad type if myriad is true, and of basic type otherwise.
@@ -537,48 +537,35 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_SpawnController.AppendSpawner = ffrg_AppendSpawner
+if not ffrg_SpawnController or ( modApi:isVersion(ffrg_SpawnController.Version, VERSION) and ffrg_SpawnController.version ~= VERSION ) then
 
-    ffrg_SpawnController.AppendBoomBots = ffrg_AppendBoomBots
+ --[[     Library    ]] ffrg_SpawnController = ffrg_SpawnController or {}
+ --[[     Version    ]] ffrg_SpawnController.version = VERSION
+ --[[ Initialization ]] ffrg_SpawnController.initialized = false
 
-    ffrg_SpawnController.AppendBasicExclusion = ffrg_AppendBasicExclusion
-    ffrg_SpawnController.AddBasicExclusion = ffrg_AddBasicExclusion
+ --[[    Overseer    ]] ffrg_SpawnController.events = {}
+ --[[      Event     ]] ffrg_SpawnController.events.onTemplateEvent = Event()
 
-    ffrg_SpawnController.AppendMyriadExclusion = ffrg_AppendMyriadExclusion
-    ffrg_SpawnController.AddMyriadExclusion = ffrg_AddMyriadExclusion
-
-    ffrg_SpawnController.ExclusionTail = ffrg_ExclusionTail
-
-    ffrg_SpawnController.ListExclusions = ffrg_ListExclusions
-
-    ffrg_SpawnController.Version = VERSION
-
-    --## Making the vanilla burrower exclusion into a basic exclusion with 1 element but an exclusion tail with 2 elements, rather than a basic exclusion with 3 elements.
-    --## Fixes a bug that prevented Blast Psions from appearing on A.C.I.D. Emergence missions and prevents said bug from expanding to any added modded units.
-
-    local temp_burrowers = {}
-
-    for _, element in ipairs(exclusiveElements[4]) do
-        if element ~= "Jelly_Explode" and element ~= "Mission_Acid" then
-            table.insert(temp_burrowers, element)
-        end
-    end
-
-    exclusiveElements[4] = temp_burrowers
-
-    ffrg_ExclusionTail("burrowers", {"Jelly_Explode", "Mission_Acid"}, false)
 end
+local function ffrg_onModsInitialized()
+if ffrg_SpawnController.version == VERSION and not ffrg_SpawnController.initialized then
 
-if ffrg_SpawnController then
-    if modApi:isVersion(ffrg_SpawnController.Version, VERSION) and ffrg_SpawnController.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_SpawnController = ffrg_SpawnController or {}
-    initialize()
-end
+ --[[     Library    ]] ttrg_SpawnController = ttrg_SpawnController or {}
+ --[[ Initialization ]] ffrg_SpawnController.initialized = true
 
+ --[[     Global     ]] ffrg_SpawnController.AppendSpawner = ffrg_AppendSpawner
+ --[[     Global     ]] ffrg_SpawnController.AppendBoomBots = ffrg_AppendBoomBots
+ --[[     Global     ]] ffrg_SpawnController.AppendBasicExclusion = ffrg_AppendBasicExclusion
+ --[[     Global     ]] ffrg_SpawnController.AddBasicExclusion = ffrg_AddBasicExclusion
+ --[[     Global     ]] ffrg_SpawnController.AppendMyriadExclusion = ffrg_AppendMyriadExclusion
+ --[[     Global     ]] ffrg_SpawnController.AddMyriadExclusion = ffrg_AddMyriadExclusion
+ --[[     Global     ]] ffrg_SpawnController.ExclusionTail = ffrg_ExclusionTail
+ --[[     Global     ]] ffrg_SpawnController.ListExclusions = ffrg_ListExclusions
+
+ --[[   Alteration   ]] local temp_burrowers = {} for _, element in ipairs(exclusiveElements[4]) do if element ~= "Jelly_Explode" and element ~= "Mission_Acid" then table.insert(temp_burrowers, element) end end exclusiveElements[4] = temp_burrowers ffrg_ExclusionTail("burrowers", {"Jelly_Explode", "Mission_Acid"}, false)
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_SpawnController
 
 

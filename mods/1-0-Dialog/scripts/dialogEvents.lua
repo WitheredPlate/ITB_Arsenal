@@ -22,7 +22,7 @@ local function ffrg_TunnelVoiceEvent(event, custom_odds)
 		odds = custom_odds
 	end
 	local random = random_int(100)
-	if odds >= random and ( not Game:IsVoicePopup() or odds == 100 ) and not Board:IsTipImage() then
+	if odds >= random and not Board:IsTipImage() and ( not Game:IsVoicePopup() or odds == 100 ) then
 		TriggerVoiceEvent(event)
 	end
 end

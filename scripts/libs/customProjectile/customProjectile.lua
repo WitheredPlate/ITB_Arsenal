@@ -21,7 +21,7 @@
 -- Description --
 -----------------
 
-local VERSION = "1.2.0"
+local VERSION = "1.2.1"
 
 --## Template
 
@@ -30,7 +30,7 @@ local VERSION = "1.2.0"
 -- Dependencies --
 ------------------
 
---## tipTracker.lua 1.0.1
+--## tipTracker.lua 1.0.2
 --## worldConstants.lua
 
 
@@ -189,7 +189,7 @@ local function ffrg_AddCustomProjectile(p1, p2, animation, config)
                 path.sAnimation = "nil"
                 config.ret:AddProjectile(p1, path, "", NO_DELAY)
             end
-            config.ret:AddScript("ffrg_CustomProjectile.InsertCustomProjectile({duration = ("..distance.."*(1 / "..config.speed..")), distance = "..config.speed..", point = "..p1:GetString()..", x = "..anim.PosX..", y = "..anim.PosY..", dir = "..dir..", animation = \""..animation.."\", speed = "..config.speed..", finished = false, instance = 0},"..tostring(tip)..")")
+            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomProjectile({duration = ("..distance.."*(1 / "..config.speed..")), distance = "..config.speed..", point = "..p1:GetString()..", x = "..anim.PosX..", y = "..anim.PosY..", dir = "..dir..", animation = \""..animation.."\", speed = "..config.speed..", finished = false, instance = 0},"..tostring(tip)..")")
         else
             ffrg_InsertCustomProjectile({duration = (distance*(1 / config.speed)), distance = config.speed, point = p1, x = anim.PosX, y = anim.PosY, dir = dir, animation = animation, speed = config.speed, finished = false, instance = 0},tip)
             if config.damage then
@@ -203,7 +203,7 @@ local function ffrg_AddCustomProjectile(p1, p2, animation, config)
     end
 end
 
-function ffrg_CustomProjectile_StandardHeightMap(portion)
+local function StandardHeightMap(portion)
     return (1-(((2*portion)-1)^2))*54
 end
 
@@ -272,7 +272,7 @@ local function ffrg_AddCustomArtillery(p1, p2, animation, config)
                 trail.bHidePath = true
                 config.ret:AddArtillery(p1, trail, "effects/ffrg_nil_"..config.trail..".png", NO_DELAY)
             end
-            config.ret:AddScript("ffrg_CustomProjectile.InsertCustomArtillery({duration = "..config.duration..", point = "..p1:GetString()..", target = "..p2:GetString()..", x = "..anim.PosX..", o_x = "..anim.PosX..", s_x = "..s_x..", so_x = "..s_x..", y = "..anim.PosY..", o_y = "..anim.PosY..", s_y = "..s_y..", so_y = "..s_y..", dir = "..dir..", animation = \""..animation.."\", shadow = \""..config.custom_shadow.."\", distance = "..distance..", finished = false, instance = 0, height_map = \""..config.height_map.."\"},"..tostring(tip)..")")
+            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomArtillery({duration = "..config.duration..", point = "..p1:GetString()..", target = "..p2:GetString()..", x = "..anim.PosX..", o_x = "..anim.PosX..", s_x = "..s_x..", so_x = "..s_x..", y = "..anim.PosY..", o_y = "..anim.PosY..", s_y = "..s_y..", so_y = "..s_y..", dir = "..dir..", animation = \""..animation.."\", shadow = \""..config.custom_shadow.."\", distance = "..distance..", finished = false, instance = 0, height_map = \""..config.height_map.."\"},"..tostring(tip)..")")
         else
             ffrg_InsertCustomArtillery({duration = config.duration, point = p1, target = p2, x = anim.PosX, o_x = anim.PosX, s_x = s_x, so_x = s_x, y = anim.PosY, o_y = anim.PosY, s_y = s_y, so_y = s_y, dir = dir, animation = animation, shadow = config.custom_shadow, distance = distance, finished = false, instance = 0, height_map = config.height_map},tip)
             if config.damage then
@@ -437,25 +437,32 @@ end
 --//       Initialization       //--
 --////////////////////////////////--
 
-local function initialize()
-    ffrg_CustomProjectile.AddCustomProjectile = ffrg_AddCustomProjectile
-    ffrg_CustomProjectile.InsertCustomProjectile = ffrg_InsertCustomProjectile
-    ffrg_CustomProjectile.AddCustomArtillery = ffrg_AddCustomArtillery
-    ffrg_CustomProjectile.InsertCustomArtillery = ffrg_InsertCustomArtillery
-    ffrg_CustomProjectile.Version = VERSION
-    modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
-    modApi.events.onFrameDrawStart:subscribe(ffrg_onFrameDrawStart)
-end
 
-if ffrg_CustomProjectile then
-    if modApi:isVersion(ffrg_CustomProjectile.Version, VERSION) and ffrg_CustomProjectile.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_CustomProjectile = ffrg_CustomProjectile or {}
-    initialize()
-end
+if not ffrg_CustomProjectile or ( modApi:isVersion(ffrg_CustomProjectile.Version, VERSION) and ffrg_CustomProjectile.version ~= VERSION ) then
 
+ --[[     Library    ]] ffrg_CustomProjectile = ffrg_CustomProjectile or {}
+ --[[     Version    ]] ffrg_CustomProjectile.version = VERSION
+ --[[ Initialization ]] ffrg_CustomProjectile.initialized = false
+
+end
+local function ffrg_onModsInitialized()
+if ffrg_CustomProjectile.version == VERSION and not ffrg_CustomProjectile.initialized then
+
+ --[[     Library    ]] ttrg_CustomProjectile = ttrg_CustomProjectile or {}
+ --[[ Initialization ]] ffrg_CustomProjectile.initialized = true
+
+ --[[     Global     ]] ffrg_CustomProjectile.AddCustomProjectile = ffrg_AddCustomProjectile
+ --[[     Global     ]] ffrg_CustomProjectile.AddCustomArtillery = ffrg_AddCustomArtillery
+ --[[     Global     ]] ttrg_CustomProjectile_StandardHeightMap = StandardHeightMap
+ --[[    Technical   ]] ttrg_CustomProjectile.InsertCustomProjectile = ffrg_InsertCustomProjectile
+ --[[    Technical   ]] ttrg_CustomProjectile.InsertCustomArtillery = ffrg_InsertCustomArtillery
+
+ --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
+ --[[  Subscription  ]] modApi.events.onFrameDrawStart:subscribe(ffrg_onFrameDrawStart)
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_CustomProjectile
+
 
 --////////////////////////////////--

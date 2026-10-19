@@ -2,7 +2,7 @@
 --//            Title           //--
 --////////////////////////////////--
 
---        Template Library        --
+--      Custom Psion Library      --
 
 --##      By WitheredPlate      ##--
 
@@ -21,9 +21,47 @@
 -- Description --
 -----------------
 
-local VERSION = "1.0.0"
+local VERSION = "1.0.1"
 
---## Template
+--## A library with functions for creating modded vek psions.
+
+
+------------------
+-- Dependencies --
+------------------
+
+--## trait.lua 3.0.1
+
+
+------------
+-- Psions --
+------------
+
+--## What CustomPsion will do for you in the production of a Psion:
+    --## Handle all of the application of the visuals for the Psion's effect, including:
+        --## The green ping and ascending banner when it is gained.
+        --## The red ping and descending banner when it is lost.
+        --## The board icon over Vek that have the Mutation.
+        --## The trait icon, title, and description in the pawn infobox for Vek that have the Mutation.
+    --## Offer utilities in the form of specifiable functions that trigger when:
+        --## The Mutation is gained by a Vek.
+        --## The Mutation is lost by a Vek.
+            --## The function for losing the Mutation also informs when it is the result of the death of a Vek, allowing easy application of death effects.
+    --## Offer a global function that checks what units on the Board currently have a given Mutation.
+    --## Offer specifiable filter functions that control what pawns trigger the utilities and visuals of this lib.
+
+--## What CustomPsion requires you to do to take advantage of the utilities:
+    --## Create several icons:
+        --## Create a basic icon for the Mutation.
+        --## Create a version of that icon with a background glow for board application.
+        --## Create a version of that icon that is desaturated/darkened version for when the Mutation is lost, or alternatively create banner animations for gaining/losing the Mutation.
+    --## Create the text for the title and description of the Psion's ability when applied to Vek.
+    --## Create a Psion pawn that has the Leader field specified as the Mutation id you have registered.
+
+--## What is up to you to finish the functionality of the Psion:
+    --## Create a passive-class weapon for the preview of the Mutation's effect and specify that weapon's id as the Psion pawn's Tooltip field.
+    --## Create the pawn sprites and profile image for the Psion, typically just by recoloring existing psions.
+    --## Leverage the CustomPsion functions to create the actual coded effect of the Mutation.
 
 
 -----------------------
@@ -143,10 +181,18 @@ local function ffrg_onMissionUpdate(mission)
             if MutationTracking[selectedId] and ( selectedPawn:IsBusy() == false or ( Board:GetBusyState() == 1 and ( not selectedTable.Jumper or selectedTable.Jumper == false ))) then
                 local mutation = MutationTracking[selectedId].mutation
                 if CheckMutation(mutation,selectedPawn) then
-                    if selectedPawn:IsFlying() then
-                        Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation.."_F",1)
+                    if selectedTable.Tier and selectedTable.Tier == TIER_BOSS then
+                        if selectedPawn:IsFlying() then
+                            Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation.."_FI",1)
+                        else
+                            Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation.."_I",1)
+                        end
                     else
-                        Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation,1)
+                        if selectedPawn:IsFlying() then
+                            Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation.."_F",1)
+                        else
+                            Board:AddAnimation(selectedPawn:GetSpace(),"ffrg_CustomPsion_Icon_"..mutation,1)
+                        end
                     end
                 end
             end
@@ -159,10 +205,18 @@ local function ffrg_onMissionUpdate(mission)
             if ( not selectedPawn or id ~= selectedPawn:GetId() ) and MutationTracking[id] and ( pawn:IsBusy() == false or ( Board:GetBusyState() == 1 and ( not table.Jumper or table.Jumper == false ))) then
                 local mutation = MutationTracking[id].mutation
                 if CheckMutation(mutation, pawn) then
-                    if pawn:IsFlying() then
-                        Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation.."_F",1)
+                    if table.Tier and table.Tier == TIER_BOSS then
+                        if pawn:IsFlying() then
+                            Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation.."_FI",1)
+                        else
+                            Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation.."_I",1)
+                        end
                     else
-                        Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation,1)
+                        if pawn:IsFlying() then
+                            Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation.."_F",1)
+                        else
+                            Board:AddAnimation(highlight,"ffrg_CustomPsion_Icon_"..mutation,1)
+                        end
                     end
                 end
             end
@@ -217,8 +271,16 @@ ANIMS.ffrg_CustomPsion_Icon = Animation:new{
     PosX = 0,
     PosY = 3
 }
+ANIMS.ffrg_CustomPsion_Icon_I = ANIMS.ffrg_CustomPsion_Icon:new{
+    PosX = 7,
+    PosY = 10
+}
 ANIMS.ffrg_CustomPsion_Icon_F = ANIMS.ffrg_CustomPsion_Icon:new{
     PosY = 8
+}
+ANIMS.ffrg_CustomPsion_Icon_FI = ANIMS.ffrg_CustomPsion_Icon:new{
+    PosX = 7,
+    PosY = 15
 }
 
 --////////////////////////////////--
@@ -275,6 +337,8 @@ local function ffrg_RegisterMutation(id, icon, sound, functions, title, descript
 
     ANIMS["ffrg_CustomPsion_Icon_"..id] = ANIMS.ffrg_CustomPsion_Icon:new{ Image = icon:sub(1, -5).."_glow.png" }
     ANIMS["ffrg_CustomPsion_Icon_"..id.."_F"] = ANIMS.ffrg_CustomPsion_Icon_F:new{ Image = icon:sub(1, -5).."_glow.png" }
+    ANIMS["ffrg_CustomPsion_Icon_"..id.."_I"] = ANIMS.ffrg_CustomPsion_Icon_I:new{ Image = icon:sub(1, -5).."_glow.png" }
+    ANIMS["ffrg_CustomPsion_Icon_"..id.."_FI"] = ANIMS.ffrg_CustomPsion_Icon_FI:new{ Image = icon:sub(1, -5).."_glow.png" }
 
     Traits:add({
         func = function(trait, pawn, loc)
@@ -329,30 +393,35 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_CustomPsion.RegisterMutation = ffrg_RegisterMutation
-    ffrg_CustomPsion.GetMutated = ffrg_GetMutated
-    ffrg_CustomPsion.Version = VERSION
-    ffrg_CustomPsion.events = {}
-    ffrg_CustomPsion.events.onMutationLost = Event()
-    ffrg_CustomPsion.events.onMutationGained = Event()
+if not ffrg_CustomPsion or ( modApi:isVersion(ffrg_CustomPsion.Version, VERSION) and ffrg_CustomPsion.version ~= VERSION ) then
 
-    modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
-    modApi.events.onMissionChanged:subscribe(ffrg_onMissionChanged)
-    modapiext.events.onResetTurn:subscribe(ffrg_onResetTurn)
-    modApi.events.onMissionStart:subscribe(ffrg_onMissionStart)
-    modApi.events.onGameEntered:subscribe(ffrg_onGameEntered)
+ --[[     Library    ]] ffrg_CustomPsion = ffrg_CustomPsion or {}
+ --[[     Version    ]] ffrg_CustomPsion.version = VERSION
+ --[[ Initialization ]] ffrg_CustomPsion.initialized = false
+
+ --[[    Overseer    ]] ffrg_CustomPsion.events = {}
+ --[[      Event     ]] ffrg_CustomPsion.events.onMutationLost = Event()
+ --[[      Event     ]] ffrg_CustomPsion.events.onMutationGained = Event()
+
 end
+local function ffrg_onModsInitialized()
+if ffrg_CustomPsion.version == VERSION and not ffrg_CustomPsion.initialized then
 
-if ffrg_CustomPsion then
-    if modApi:isVersion(ffrg_CustomPsion.Version, VERSION) and ffrg_CustomPsion.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_CustomPsion = ffrg_CustomPsion or {}
-    initialize()
-end
+ --[[     Library    ]] ttrg_CustomPsion = ttrg_CustomPsion or {}
+ --[[ Initialization ]] ffrg_CustomPsion.initialized = true
 
+ --[[     Global     ]] ffrg_CustomPsion.RegisterMutation = ffrg_RegisterMutation
+ --[[     Global     ]] ffrg_CustomPsion.GetMutated = ffrg_GetMutated
+ --[[    Technical   ]] ttrg_CustomPsion.Technical = Technical
+
+ --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
+ --[[  Subscription  ]] modApi.events.onMissionChanged:subscribe(ffrg_onMissionChanged)
+ --[[  Subscription  ]] modapiext.events.onResetTurn:subscribe(ffrg_onResetTurn)
+ --[[  Subscription  ]] modApi.events.onMissionStart:subscribe(ffrg_onMissionStart)
+ --[[  Subscription  ]] modApi.events.onGameEntered:subscribe(ffrg_onGameEntered)
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_CustomPsion
 
 

@@ -432,22 +432,25 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_SeriousDamage.InflictSeriousDamage = ffrg_InflictSeriousDamage
-    ffrg_SeriousDamage.AppendSeriousDamage = ffrg_AppendSeriousDamage
-    ffrg_SeriousDamage.InflictSeriousHealing = ffrg_InflictSeriousHealing
-    ffrg_SeriousDamage.Version = VERSION
-end
+if not ffrg_SeriousDamage or ( modApi:isVersion(ffrg_SeriousDamage.Version, VERSION) and ffrg_SeriousDamage.version ~= VERSION ) then
 
-if ffrg_SeriousDamage then
-    if modApi:isVersion(ffrg_SeriousDamage.Version, VERSION) and ffrg_SeriousDamage.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_SeriousDamage = ffrg_SeriousDamage or {}
-    initialize()
-end
+ --[[     Library    ]] ffrg_SeriousDamage = ffrg_SeriousDamage or {}
+ --[[     Version    ]] ffrg_SeriousDamage.version = VERSION
+ --[[ Initialization ]] ffrg_SeriousDamage.initialized = false
 
+end
+local function ffrg_onModsInitialized()
+if ffrg_SeriousDamage.version == VERSION and not ffrg_SeriousDamage.initialized then
+
+ --[[     Library    ]] ttrg_SeriousDamage = ttrg_SeriousDamage or {}
+ --[[ Initialization ]] ffrg_SeriousDamage.initialized = true
+
+ --[[     Global     ]] ffrg_SeriousDamage.InflictSeriousDamage = ffrg_InflictSeriousDamage
+ --[[     Global     ]] ffrg_SeriousDamage.AppendSeriousDamage = ffrg_AppendSeriousDamage
+ --[[     Global     ]] ffrg_SeriousDamage.InflictSeriousHealing = ffrg_InflictSeriousHealing
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_SeriousDamage
 
 

@@ -1444,12 +1444,12 @@ function ffrg_Support_Overclock:GetSkillEffect(p1,p2)
     else pawn = Board:GetPawn(p2)
     end
     local id = pawn:GetId()
-    local damage = ffrg_ActionsPlus.OverclockDamage(p2,{self_force = true})
+    local damage = ffrg_ActionsPlus.OverclockDamage(p2)
     if self.Boost then
         local boost = ( true and not pawn:IsBoosted() ) or false
-        if p1 == p2 then boost = true end
         local overclock = ( true and ( not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 ) ) or false
         if p1 == p2 and GAME.ffrg_OverclockedData[id] and GAME.ffrg_OverclockedData[id].stage == 2 then overclock = true end
+        if p1 == p2 and overclock then boost = true end
         if boost and overclock then
             damage.sImageMark = "combat/icons/ffrg_icon_overboost_glow.png"
         elseif boost then
@@ -1478,7 +1478,6 @@ function ffrg_Support_Overclock:IsTwoClickException(p1,p2)
     local id = pawn:GetId()
     if self.Boost and not pawn:IsBoosted() then return true end
     if not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 then return true end
-    if p1 == p2 and GAME.ffrg_OverclockedData[id].stage == 2 then return true end
     return false
 end
 

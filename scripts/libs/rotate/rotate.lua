@@ -23,16 +23,40 @@
 
 local VERSION = "1.0.0"
 
---## Template
+--## A library of functions for applying a modded weapon effect, Rotate. ##--
+
+
+------------------
+-- Dependencies --
+------------------
+
+--## weaponPreview.lua 3.1.3
+
+
+------------
+-- Rotate --
+------------
+
+--## Rotate functions similarly to flip, but instead of displacing an enemy's target by 180 degrees, it does so by 90 degrees.
+--## Rotate can be clockwise or counterclockwise. Most weapons that use it allow the user to choose which direction.
 
 
 -----------------------
 -- Table of Contents --
 -----------------------
 
---## Function
--- ( perameter [Type] )
---
+--## ffrg_Rotate.Rotate
+-- ( point [Point],  rot [Integer] )
+-- Rotates the specified point by the specified orientation.
+-- A rot of 0 indicates clockwise Rotation, a rot of 1 indicates counterclockwise Rotation.
+
+--## ffrg_Rotate.RotateDamage
+-- ( point [Point],  rot [Integer],  config [Table] ) -> SpaceDamage
+-- Returns a SpaceDamage instance than will apply Rotation and has all the associated visuals.
+-- Additionally has config options, listed below.
+    -- icon [Boolean] indicates whether or not the SpaceDamage should have the rotation icon. Defaults to true.
+    -- base [Boolean] indicates whether or not the SpaceDamage should have the rotation base outline. Defaults to true.
+    -- damage [Integer] indicates an amount of damage that the SpaceDamage should deal. Using this option instead of setting iDamage is important, as using this option will visually offset the rotation icons from the damage icon.
 
 
 --////////////////////////////////--
@@ -59,6 +83,7 @@ local files = {
     "icons/ffrg_rotate_counterclockwise_off_glow",
     "icons/ffrg_rotate_counterclockwise_outer_glow",
     "icons/ffrg_rotate_counterclockwise_outer_off_glow",
+    "ffrg_rotate_cancel_alert",
     "ffrg_rotate_base",
     "ffrg_rotate_base_off"
 }
@@ -76,9 +101,18 @@ Location["combat/icons/ffrg_rotate_clockwise_outer_off_glow.png"] = Point(-21,7)
 Location["combat/icons/ffrg_rotate_counterclockwise_outer_glow.png"] = Point(-21,7)
 Location["combat/icons/ffrg_rotate_counterclockwise_outer_off_glow.png"] = Point(-21,7)
 
+ANIMS.ffrg_Rotate_cancel_alert = Animation:new{
+    Image = "combat/ffrg_rotate_cancel_alert.png",
+    NumFrames = 5,
+    Frames = {4,3,2,1,0,1,2,3,4},
+    Lengths = {0.01,0.01,0.01,0.01,0.86,0.025,0.025,0.025,0.025},
+    Loop = false,
+    PosX = 3,
+    PosY = -39
+}
 ANIMS.ffrg_Rotate_base = Animation:new{
     Image = "combat/ffrg_rotate_base.png",
-    Layer = ANIMS.LAYER_FLOOR,
+    Layer = ANIMS.LAYER_BACK,
     NumFrames = 1,
     Time = 0,
     Loop = true,
@@ -114,7 +148,7 @@ ANIMS.ffrg_Rotate_base_off_xx = ANIMS.ffrg_Rotate_base_off:new{
 
 
 local function ttrg_DirRotate(dir, rot)
-    if rot == 1 then
+    if rot == 0 then
         return (dir + 1)%4
     elseif dir == 0 then
         return 3
@@ -192,11 +226,30 @@ end
 local function ffrg_RotateI(point, rot)
     if Board and Board:IsPawnSpace(point) then
         local pawn = Board:GetPawn(point)
-        if pawn:IsQueued() then
+        local webFlip = false
+        for i = DIR_START, DIR_END do
+            local curr = point+DIR_VECTORS[i]
+            if Board:IsValid(curr) and Board:IsPawnSpace(curr) and Board:GetPawn(curr):IsGrappled() then webFlip = true end
+        end
+        if webFlip then
             Board:DamageSpace(SpaceDamage(point,0,DIR_FLIP))
+            Board:DamageSpace(SpaceDamage(point,0,DIR_FLIP))
+        end
+        if pawn:IsQueued() then
             local space = pawn:GetSpace()
             local target = pawn:GetQueuedTarget()
-            pawn:SetQueuedTarget(ttrg_PointRotate(target, space, rot))
+            local new = ttrg_PointRotate(target, space, rot)
+            pawn:SetQueuedTarget(new)
+            if not Board:IsValid(new) then
+                local ret = SkillEffect()
+                local anim1 = SpaceDamage(point,0)
+                anim1.sAnimation = "ffrg_Rotate_cancel_alert"
+                ret:AddDamage(anim1)
+                local anim2 = SpaceDamage(point,0)
+                anim2.sAnimation = "ffrg_Rotate_cancel_outline"
+                ret:AddDamage(anim2)
+                Board:AddEffect(ret)
+            end
         end
     end
 end
@@ -213,21 +266,27 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_Rotate.RotateDamage = ffrg_RotateDamage
-    ffrg_Rotate.Rotate = ffrg_RotateI
-    ffrg_Rotate.Version = VERSION
-end
+if not ffrg_Rotate or ( modApi:isVersion(ffrg_Rotate.Version, VERSION) and ffrg_Rotate.version ~= VERSION ) then
 
-if ffrg_Rotate then
-    if modApi:isVersion(ffrg_Rotate.Version, VERSION) and ffrg_Rotate.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_Rotate = ffrg_Rotate or {}
-    initialize()
-end
+ --[[     Library    ]] ffrg_Rotate = ffrg_Rotate or {}
+ --[[     Version    ]] ffrg_Rotate.version = VERSION
+ --[[ Initialization ]] ffrg_Rotate.initialized = false
 
+ --[[    Overseer    ]] ffrg_Rotate.events = {}
+ --[[      Event     ]] ffrg_Rotate.events.onTemplateEvent = Event()
+
+end
+local function ffrg_onModsInitialized()
+if ffrg_Rotate.version == VERSION and not ffrg_Rotate.initialized then
+
+ --[[     Library    ]] ttrg_Rotate = ttrg_Rotate or {}
+ --[[ Initialization ]] ffrg_Rotate.initialized = true
+
+ --[[     Global     ]] ffrg_Rotate.RotateDamage = ffrg_RotateDamage
+ --[[     Global     ]] ffrg_Rotate.Rotate = ffrg_RotateI
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_Rotate
 
 

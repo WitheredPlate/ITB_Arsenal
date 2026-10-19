@@ -23,7 +23,7 @@
 
 local VERSION = "1.0.0"
 
---## Template
+--## A library of functions for applying a modded weapon effect, Shove. ##--
 
 
 ------------------
@@ -40,6 +40,28 @@ local VERSION = "1.0.0"
 ---------------------------
 
 --## queuedPreview.lua 1.0.0
+    -- Required for Queued Shoves
+
+
+------------
+-- Shove --
+------------
+
+--## Shove is essentially a stronger version of push, that can push multiple tiles and deal more than one bump damage.
+--## Each instance of Shove has an accompanying force value, which defines how far the Shove attempts to displace the target.
+--## If a Shove cannot displace a unit the maximum distance, it deals bump damage to the Shoved unit and the obstacle equal to the number of tiles that the unit was prevented from being displaced.
+    --## For example, if you Shove a unit with 3 force and there are 3 open tiles behind it for it to travel, it will travel all 3 of those tiles and end the displacement nonlethally.
+    --## If there's an obstacle on the third tile, the unit will travel only two tiles and both will take 1 bump damage.
+    --## If there's an obstacle on the second, the unit will travel only a single tile and both will take 2 bump damage.
+    --## An obstacle on the first means the unit is not displaced at all, but the unit and the obstacle both take 3 bump damage.
+--## Like push, you cannot Shove stable units.
+--## You cannot Shove a unit past a terrain tile that is ordinarily instantly lethal for it.
+    --## For example, you may not Shove a Firefly past a water tile. It is Shoved into the water tile no matter how much force the Shove has and instantly dies.
+    --## A Hornet in the same situation could be Shoved past the water, because a hornet flies and thus cannot fall into the water.
+    --## A Mech, even without Flying, could also be Shoved past water, because the Massive trait makes Water nonlethal.
+--## A shove of force 1 is identical to a push.
+
+--## Shove is fairly unstable, finicky, and still in progress. Many features are uncompleted or do not always work, and minor visual glitches with Shoves will very occasionally appear for 1 frame due to imperfect math.
 
 
 -----------------------
@@ -48,7 +70,28 @@ local VERSION = "1.0.0"
 
 --## ffrg_Shove.Shove
 -- ( point [Point], dir [Integer], force [Integer], config [Table] )
---
+-- Instantly shoves a target or adds a Shove to a SkillEffect, with the specified point, direction, force, and config options, listed below.
+    -- queued [Boolean] indicates whether or not the attack should be queued. Unused in "instant" mode. NOTICE queued shoves have not been finished yet and will not function.
+    -- mode [String] indicates how the Shove should be implemented.
+        -- "instant" immediately applies the Shove to the Board.
+        -- "simple" adds the Shove to the SkillEffect specified by the ret config option.
+    -- ret [SkillEffect] indicates the SkillEffect that the Shove should be added to. Unused in "instant" mode.
+    -- standard_anim [String] indicates an animation from the base options in the Shove library that should be used for the shove.
+        -- "air" is analagous to the vanilla airpush animation, and appears as a translucent gust. Recommended for nondamaging shoves.
+        -- "explo" is analagous to the vanilla explopush animations, and appears as a bright explosion that fades into smoke. Recommended for damaging shoves. NOTICE exploshove animations are not made yet and will not function.
+    -- delay [Float] indicates a delay in seconds that the instance of Shove should independently count down before it is applied.
+        -- It is HIGHLY RECOMMENDED that you use this in lieu of or in conjunction with a SkillEffect's AddDelay, as each Shove is technically an independent effect and need a period where the board is not busy to jump in.
+        -- If you do not make use of this, the effects of Shove will likely be very strangely timed unless the Shove is the very last thing your weapon does that occupies the board.
+    -- bounce_data [Table] indicates a number of bounce profiles that will add bounce to the effects of your Shove.
+        -- Bounce added to the board by some means after a Shove begins can interfere with the very precise timing of Shoves, so it's recommended to make use of this instead wherever possible.
+        -- Even with this method, however, applying multiple shoves in a row with large delays can still cause issues with bounce timing.
+        -- A bounce profile [Table] has the following fields.
+            -- bounce [Integer] indicates the magnitude of the bounce that should be applied.
+                -- Both negative and positive values are accepted, zero values will be discarded.
+            -- bounce_type [String] indicates how the bounce should be applies.
+                -- "simple" applies the bounce to the tile that is shoved and nothing else. This will apply even if the Shove does not hit a valid target.
+                -- "trail_1" applies the bounce to every tile the shoved unit passes over, including the initial shoved tile. This will only apply if the Shove hits a valid target.
+                -- "trail_2" is identical to "trail_1", except it does not shove the first tile. Largely this is meant to be combined with "simple"
 
 
 --////////////////////////////////--
@@ -266,6 +309,25 @@ end
 
 local ffrg_TipWeaponId = ""
 
+local function ttrg_TableToString(table)
+    if table == nil then return "{}" end
+    if type(table) ~= "table" then return tostring(table) end
+    local result = "{"
+    for k, v in pairs(table) do
+        local key = type(k) == "string" and string.format("[%q]", k) or "["..k.."]"
+        local value
+        if type(v) == "table" then
+            value = table_to_string(v)
+        elseif type(v) == "string" then
+            value = string.format("%q", v)
+        else
+            value = tostring(v)
+        end
+        result = result .. key .. "=" .. value .. ","
+    end
+    return result .. "}"
+end
+
 local function ffrg_onTargetAreaBuild(mission, pawn, weaponId, point, pointList)
     if Board and Board:IsTipImage() then
         ffrg_TipWeaponId = weaponId
@@ -277,9 +339,6 @@ local function ffrg_onSecondTargetAreaBuild(mission, pawn, weaponId, p1, p2, poi
         ffrg_TipWeaponId = weaponId
     end
 end
-
-modapiext.events.onTargetAreaBuild:subscribe(ffrg_onTargetAreaBuild)
-modapiext.events.onSecondTargetAreaBuild:subscribe(ffrg_onSecondTargetAreaBuild)
 
 
 --////////////////////////////////--
@@ -293,13 +352,38 @@ modapiext.events.onSecondTargetAreaBuild:subscribe(ffrg_onSecondTargetAreaBuild)
 --////////////////////////////////--
 
 
-local function ffrg_ShoveAnim(point, dir, speed, delay)
+local function ffrg_ShoveBounce(p1, p2, speed, delay, bounce, bounce_type)
+    local bouncer = SkillEffect()
+    if delay and delay > 0 then
+        bouncer:AddDelay(delay)
+    end
+    if bounce_type == "trail_1" or bounce_type == "trail_2" then
+        if p2 then
+            local dir = GetDirection(p2-p1)
+            local distance = p1:Manhattan(p2)
+            start = ( bounce_type == "trail_1" and 0 ) or ( bounce_type == "trail_2" and 1 )
+            if distance > start then
+                for i = start, distance-1 do
+                    local curr = p1+DIR_VECTORS[dir]*i
+                    bouncer:AddDelay(1.5/(speed+6))
+                    bouncer:AddBounce(curr,bounce)
+                end
+            end
+        end
+    else
+        bouncer:AddBounce(p1, bounce)
+    end
+    Board:AddEffect(bouncer)
+end
+
+
+local function ffrg_ShoveAnim(point, dir, speed, delay, anim_type)
     local anim = SkillEffect()
     local fx = SpaceDamage(point,0)
     if delay and delay > 0 then
         anim:AddDelay(delay)
     end
-    fx.sAnimation = "ffrg_airshove"..speed.."_"..dir
+    fx.sAnimation = "ffrg_"..anim_type.."shove"..speed.."_"..dir
     anim:AddDamage(fx)
     Board:AddEffect(anim)
 end
@@ -373,8 +457,9 @@ local function ffrg_ApplyShove(point, dir, force, config)
         config.queued = config.queued or false
         config.delay = config.delay or 0
         config.mode = config.mode or "instant"
+        config.bounce_data = config.bounce_data or {}
         if config.standard_anim == nil then
-            config.standard_anim = true
+            config.standard_anim = ""
         end
         local type = ""
         local impact_damage = 0
@@ -422,7 +507,12 @@ local function ffrg_ApplyShove(point, dir, force, config)
         if type == "" or type == "kill" or type == "impact" or ( type == "miss" and travelled > 0 ) then
             local final = point + DIR_VECTORS[dir]*travelled
             if config.ret and config.mode ~= "instant" then
-                config.ret:AddScript("ffrg_Shove.ShoveCharge("..point:GetString()..","..final:GetString()..","..speed..","..impact_damage..","..tostring(config.standard_anim)..","..config.delay..","..tostring(lethal_terrain)..")")
+                config.ret:AddScript("ttrg_Shove.ShoveCharge("..point:GetString()..","..final:GetString()..","..speed..","..impact_damage..",\""..config.standard_anim.."\","..config.delay..","..tostring(lethal_terrain)..")")
+                for _, bouncer in ipairs(config.bounce_data) do
+                    if bouncer.bounce and bouncer.bounce_type and bouncer.bounce ~= 0 then
+                        config.ret:AddScript("ttrg_Shove.ShoveBounce("..point:GetString()..","..final:GetString()..","..speed..","..config.delay..","..bouncer.bounce..",\""..bouncer.bounce_type.."\")")
+                    end
+                end
                 if impact_damage > 0 then
                     if config.origin and Board:IsPawnSpace(config.origin) then
                         local pawn2 = Board:GetPawn(config.origin)
@@ -435,12 +525,27 @@ local function ffrg_ApplyShove(point, dir, force, config)
                 end
             elseif config.mode == "instant" then
                 ffrg_ShoveCharge(point, final, speed, impact_damage, config.standard_anim, config.delay)
+                for _, bouncer in ipairs(config.bounce_data) do
+                    if bouncer.bounce and bouncer.bounce_type and bouncer.bounce > 0 then
+                        ffrg_ShoveBounce(point, final, speed, config.delay, bouncer.bounce, bouncer.bounce_type)
+                    end
+                end
             end
-        elseif config.standard_anim then
+        else
             if config.ret and config.mode ~= "instant" then
-                config.ret:AddScript("ffrg_Shove.ShoveAnim("..point:GetString()..","..dir..","..speed..","..config.delay..")")
+                if config.standard_anim ~= "" then config.ret:AddScript("ttrg_Shove.ShoveAnim("..point:GetString()..","..dir..","..speed..","..config.delay..","..config.standard_anim..")") end
+                for _, bouncer in ipairs(config.bounce_data) do
+                    if bouncer.bounce and bouncer.bounce_type and bouncer.bounce_type == "single" and bouncer.bounce ~= 0 then
+                        config.ret:AddScript("ttrg_Shove.ShoveBounce("..point:GetString()..",nil,"..speed..","..config.delay..","..bouncer.bounce..",\""..bouncer.bounce_type.."\")")
+                    end
+                end
             elseif config.mode == "instant" then
-                ffrg_ShoveAnim(point, dir, speed, config.delay)
+                if config.standard_anim ~= "" then ffrg_ShoveAnim(point, dir, speed, config.delay, config.standard_anim) end
+                for _, bouncer in ipairs(config.bounce_data) do
+                    if bouncer.bounce and bouncer.bounce_type and bouncer.bounce_type == "single" and bouncer.bounce ~= 0 then
+                        ffrg_ShoveBounce(point, nil, speed, config.delay, bouncer.bounce, bouncer.bounce_type)
+                    end
+                end
             end
         end
         if config.ret and config.mode ~= "instant" then
@@ -523,26 +628,33 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_Shove.Shove = ffrg_ApplyShove
-    ffrg_Shove.ShoveCharge = ffrg_ShoveCharge
-    ffrg_Shove.ShoveAnim = ffrg_ShoveAnim
-    ffrg_Shove.ReQueue = ffrg_ReQueue
-    ffrg_Shove.FORCE_DEATH = FORCE_DEATH
-    ffrg_Shove.Version = VERSION
-    ffrg_Shove.events = {}
-    ffrg_Shove.events.onShoveBumpDamage = Event()
-end
+if not ffrg_Shove or ( modApi:isVersion(ffrg_Shove.Version, VERSION) and ffrg_Shove.version ~= VERSION ) then
 
-if ffrg_Shove then
-    if modApi:isVersion(ffrg_Shove.Version, VERSION) and ffrg_Shove.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_Shove = ffrg_Shove or {}
-    initialize()
-end
+ --[[     Library    ]] ffrg_Shove = ffrg_Shove or {}
+ --[[     Version    ]] ffrg_Shove.version = VERSION
+ --[[ Initialization ]] ffrg_Shove.initialized = false
 
+ --[[    Overseer    ]] ffrg_Shove.events = {}
+ --[[      Event     ]] ffrg_Shove.events.onShoveBumpDamage = Event()
+
+end
+local function ffrg_onModsInitialized()
+if ffrg_Shove.version == VERSION and not ffrg_Shove.initialized then
+
+ --[[     Library    ]] ttrg_Shove = ttrg_Shove or {}
+ --[[ Initialization ]] ffrg_Shove.initialized = true
+
+ --[[     Global     ]] ffrg_Shove.Shove = ffrg_ApplyShove
+ --[[     Global     ]] ffrg_Shove.FORCE_DEATH = FORCE_DEATH
+ --[[    Technical   ]] ttrg_Shove.ShoveCharge = ffrg_ShoveCharge
+ --[[    Technical   ]] ttrg_Shove.ShoveAnim = ffrg_ShoveAnim
+ --[[    Technical   ]] ttrg_Shove.ShoveBounce = ffrg_ShoveBounce
+
+ --[[  Subscription  ]] modapiext.events.onTargetAreaBuild:subscribe(ffrg_onTargetAreaBuild)
+ --[[  Subscription  ]] modapiext.events.onSecondTargetAreaBuild:subscribe(ffrg_onSecondTargetAreaBuild)
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_Shove
 
 

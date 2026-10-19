@@ -21,18 +21,80 @@
 -- Description --
 -----------------
 
-local VERSION = "1.0.0"
+local VERSION = "1.0.1"
 
---## Template
+--## A library of functions for applying the modded statuses Overclock and Accelerate. ##--
+
+
+------------------
+-- Dependencies --
+------------------
+
+--## trait.lua 3.0.1
+
+
+---------------
+-- Overclock --
+---------------
+
+--## Overclock is a custom status that can be applied to any allied pawn that has at least one active weapon.
+--## An Overclocked unit may act any time their normal action has already been used, but doing so will consume the Overclocking.
+--## An Overclocked unit cannot be Overclocked again until the Overclocking is consumed.
+
+
+----------------
+-- Accelerate --
+----------------
+
+--## Accelerate is a custom status that can be applied to any allied pawn that has at least one base movement.
+--## An Accelerated unit may move any time their normal movement has already been used, but doing so will consume the Acceleration
+--## An Accelerated unit cannot be Accelerated again until the Acceleration is consumed.
 
 
 -----------------------
 -- Table of Contents --
 -----------------------
 
---## Function
--- ( perameter [Type] )
---
+--## ffrg_ActionsPlus.Overclock
+-- ( pawn [Pawn],  isOverclock [Boolean],  config [Table] )
+-- Instantly Overclocks or removes the overclocking on the specified pawn, with config options, specified below.
+    -- fx [Boolean] indicates whether or not to apply the standard visuals and sound of a unit being Overclocked. Defaults to true.
+    -- stage [Integer, TECHNICAL] forces a specific stage of Overclocking to be set.
+        -- 1 is the default stage, and will apply the Overclocking ready to substitute for an action.
+        -- 2 is the secondary stage, and will make the Overclocking assume that the target has already used their normal action even if they have not.
+        -- 3 is an unused technical stage that currently does nothing.
+    -- timer [Integer, TECHNICAL] indicates what value the timer for the pulsing orange color should start at.
+
+--## ffrg_ActionsPlus.OverclockDamage
+-- ( point [Point],  config [Table] ) -> SpaceDamage
+-- Returns a SpaceDamage instance that will apply Overclocking and has all the associated visuals.
+-- Shares the config options of ffrg_ActionsPlus.Overclock, with one additional option listed below.
+    -- self_force [Boolean], when true, will assume that the Overclocking is being applied to a unit by that unit, and will allow itself to be applied even when the unit has stage II Overclocking.
+
+--## ffrg_ActionsPlus.Accelerate
+-- ( pawn [Pawn],  isAccelerate [Boolean],  config [Table] )
+-- Instantly Accelerates or removes the acceleration on the specified pawn, with config options, specified below.
+    -- fx [Boolean] indicates whether or not to apply the standard visuals and sound of a unit being Accelerated. Defaults to true.
+    -- stage [Integer, TECHNICAL] forces a specific stage of Acceleration to be set.
+        -- 1 is the default stage, and will apply the Acceleration ready to substitute for an action.
+        -- 2 is the secondary stage, and will make the Acceleration assume that the target has already used their normal movement even if they have not.
+        -- 3 is an unused technical stage that currently does nothing.
+    -- timer [Integer, TECHNICAL] indicates what value the timer for the pulsing blue color should start at.
+
+--## ffrg_ActionsPlus.OverclockDamage
+-- ( point [Point],  config [Table] ) -> SpaceDamage
+-- Returns a SpaceDamage instance that will apply Acceleration and has all the associated visuals.
+-- Shares the config options of ffrg_ActionsPlus.Accelerate.
+
+--## ffrg_ActionsPlus.events.onPawnIsOverclocked
+--## ( mission [Mission],  pawn [Pawn],  isOverclock [Boolean] )
+--## An event that triggers whenever a pawn is Overclocked or has Overclocking removed.
+--## Returns the current mission, the pawn that was affected, and whether the pawn gained or lost Overclocking.
+
+--## ffrg_ActionsPlus.events.onPawnIsAccelerated
+--## ( mission [Mission],  pawn [Pawn],  isAccelerate [Boolean] )
+--## An event that triggers whenever a pawn is Accelerated or has Acceleration removed.
+--## Returns the current mission, the pawn that was affected, and whether the pawn gained or lost Acceleration.
 
 
 --////////////////////////////////--
@@ -167,7 +229,7 @@ ANIMS.ffrg_ActionsPlus_overclock_banner = Animation:new{
     NumFrames = 20,
     Time = 0.05,
     Loop = false,
-    PosX = -8,
+    PosX = -4,
     PosY = -1
 }
 ANIMS.ffrg_ActionsPlus_accelerate_banner = Animation:new{
@@ -176,7 +238,7 @@ ANIMS.ffrg_ActionsPlus_accelerate_banner = Animation:new{
     NumFrames = 20,
     Time = 0.05,
     Loop = false,
-    PosX = -8,
+    PosX = -4,
     PosY = -1
 }
 
@@ -217,7 +279,6 @@ local ffrg_onGameEntered = function()
     GAME.ffrg_AcceleratedData = GAME.ffrg_AcceleratedData or {}
     GAME.ffrg_OverclockedData = GAME.ffrg_OverclockedData or {}
 end
-modApi.events.onGameEntered:subscribe(ffrg_onGameEntered)
 
 local function ffrg_ClearAllActionData()
     GAME.ffrg_AcceleratedData = {}
@@ -238,10 +299,6 @@ end
 local function ffrg_onTestMechExited(mission)
     ffrg_ClearAllActionData()
 end
-modApi.events.onMissionStart:subscribe(ffrg_onMissionEnd)
-modApi.events.onMissionEnd:subscribe(ffrg_onMissionEnd)
-modApi.events.onTestMechEntered:subscribe(ffrg_onTestMechEntered)
-modApi.events.onTestMechExited:subscribe(ffrg_onTestMechExited)
 
 local function ttrg_TableToString(table)
     if table == nil then return "{}" end
@@ -276,7 +333,6 @@ local function ffrg_onMissionUpdate2(mission)
         isPlayerActionable = true
     end
 end
-modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate2)
 
 EXCL = {"GetAmbience", "GetBonusStatus", "BaseUpdate", "UpdateMission", "GetCustomTile", "GetDamage", "GetTurnLimit", "BaseObjectives", "UpdateObjectives",}
 for i,v in pairs(Mission) do
@@ -336,7 +392,7 @@ local function ffrg_OverclockDamage(point, config)
         local pawn = Board:GetPawn(point)
         id = pawn:GetId()
         local team = pawn:GetTeam()
-        if team == TEAM_PLAYER and pawn:GetWeaponCount() > 0 and ( Board:IsTipImage() or not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 ) then miss = false end
+        if team == TEAM_PLAYER and pawn:GetWeaponCount() > 0 and ( Board:IsTipImage() or not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 or ( config.self_force and GAME.ffrg_OverclockedData[id].stage == 2 ) ) then miss = false end
     end
     if miss then
         damage.sImageMark = "combat/icons/icon_overclock_miss.png"
@@ -359,7 +415,7 @@ local function ffrg_AccelerateDamage(point, config)
         local pawn = Board:GetPawn(point)
         id = pawn:GetId()
         local team = pawn:GetTeam()
-        if team == TEAM_PLAYER and pawn:GetMoveSpeed() > 0 and ( Board:IsTipImage() or not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 ) then miss = false end
+        if team == TEAM_PLAYER and ( Board:IsTipImage() or pawn:GetMoveSpeed() > 0 or pawn:GetBaseMove() > 0 ) and ( Board:IsTipImage() or not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 ) then miss = false end
     end
     if miss then
         damage.sImageMark = "combat/icons/icon_accelerate_miss.png"
@@ -377,6 +433,7 @@ local function ffrg_Overclock(pawn, isOverclock, config)
         config.stage = config.stage or 1
         config.timer = config.timer or 1.2
         config.self_force = config.self_force or false
+        if config.event == nil then config.event = true end
         if config.fx == nil then config.fx = true end
         if isOverclock == nil then isOverclock = true end
         if not Board:IsTipImage() then
@@ -384,13 +441,17 @@ local function ffrg_Overclock(pawn, isOverclock, config)
         end
         if isOverclock then
             if Board:IsTipImage() or not GAME.ffrg_OverclockedData[id] or GAME.ffrg_OverclockedData[id].stage == 3 or ( config.self_force and GAME.ffrg_OverclockedData[id].stage == 2 ) then
-                ffrg_ActionsPlus.events.onPawnIsOverclocked:dispatch(GetCurrentMission(), pawn, true)
+                if config.event then
+                    ffrg_ActionsPlus.events.onPawnIsOverclocked:dispatch(GetCurrentMission(), pawn, true)
+                end
                 if not Board:IsTipImage() then
                     GAME.ffrg_OverclockedData[id] = {stage = config.stage, timer = config.timer, stagger = false, bonus_pings = 0, halo_timer = 0, buffer = 0}
                 end
                 if config.fx then
                     local space = pawn:GetSpace()
-                    Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/battle/withdraw"))
+                    if not Board:IsTipImage() then
+                        Game:TriggerSound("/ui/battle/withdraw")
+                    end
                     if space then
                         Board:AddAnimation(space,"ffrg_ActionsPlus_overclock_banner",1)
                         Board:Ping(space,OvcColor)
@@ -400,8 +461,8 @@ local function ffrg_Overclock(pawn, isOverclock, config)
         else
             if config.fx and GAME.ffrg_OverclockedData[id] then
                 ffrg_ActionsPlus.events.onPawnIsOverclocked:dispatch(GetCurrentMission(), pawn, false)
-                Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/map/map_ping_big"))
                 if not Board:IsTipImage() then
+                    Game:TriggerSound("/ui/map/map_ping_big")
                     GAME.ffrg_OverclockedData[id] = nil
                 end
             end
@@ -414,6 +475,7 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
         config = config or {}
         config.stage = config.stage or 1
         config.timer = config.timer or 1.2
+        if config.event == nil then config.event = true end
         if config.fx == nil then config.fx = true end
         if isAccelerate == nil then isAccelerate = true end
         if not Board:IsTipImage() then
@@ -421,13 +483,17 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
         end
         if isAccelerate then
             if Board:IsTipImage() or not GAME.ffrg_AcceleratedData[id] or GAME.ffrg_AcceleratedData[id].stage == 3 then
-                ffrg_ActionsPlus.events.onPawnIsAccelerated:dispatch(GetCurrentMission(), pawn, true)
+                if config.event then
+                    ffrg_ActionsPlus.events.onPawnIsAccelerated:dispatch(GetCurrentMission(), pawn, true)
+                end
                 if not Board:IsTipImage() then
                     GAME.ffrg_AcceleratedData[id] = {stage = config.stage, timer = config.timer, bonus_pings = 0, halo_timer = 0, bonused = false, buffer = 0}
                 end
                 if config.fx then
                     local space = pawn:GetSpace()
-                    Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/battle/end_turn"))
+                    if not Board:IsTipImage() then
+                        Game:TriggerSound("/ui/general/mech_selection")
+                    end
                     if space then
                         Board:AddAnimation(space,"ffrg_ActionsPlus_accelerate_banner",1)
                         Board:Ping(space,AccColor)
@@ -437,8 +503,8 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
         else
             if config.fx and GAME.ffrg_AcceleratedData[id] then
                 ffrg_ActionsPlus.events.onPawnIsAccelerated:dispatch(GetCurrentMission(), pawn, false)
-                Board:DamageSpace(SoundEffect(Point(-1,-1),"/ui/map/map_ping_big"))
                 if not Board:IsTipImage() then
+                    Game:TriggerSound("/ui/map/map_ping_big")
                     GAME.ffrg_AcceleratedData[id] = nil
                 end
             end
@@ -446,18 +512,18 @@ local function ffrg_Accelerate(pawn, isAccelerate, config)
     end
 end
 
-function ffrg_AccProf(id)
-    local pawn = Board:GetPawn(id)
-    if pawn then
-        local bonused = false
-        local stage = 0
-        if GAME and GAME.ffrg_AcceleratedData and GAME.ffrg_AcceleratedData[id] then
-            bonused = GAME.ffrg_AcceleratedData[id].bonused
-            stage = GAME.ffrg_AcceleratedData[id].stage
-        end
-        LOG("Pawn "..id..":\nHas Moved: "..tostring(pawn:IsMovementSpent()).."\nBonus Move: "..pawn:GetBonusMove().."\nIs Active: "..tostring(pawn:IsActive()).."\nHas Bonus Acceleration Move: "..tostring(bonused).."\nAcceleration Stage: "..stage)
-    end
-end
+-- function ffrg_AccProf(id)
+--     local pawn = Board:GetPawn(id)
+--     if pawn then
+--         local bonused = false
+--         local stage = 0
+--         if GAME and GAME.ffrg_AcceleratedData and GAME.ffrg_AcceleratedData[id] then
+--             bonused = GAME.ffrg_AcceleratedData[id].bonused
+--             stage = GAME.ffrg_AcceleratedData[id].stage
+--         end
+--         LOG("Pawn "..id..":\nHas Moved: "..tostring(pawn:IsMovementSpent()).."\nBonus Move: "..pawn:GetBonusMove().."\nIs Active: "..tostring(pawn:IsActive()).."\nHas Bonus Acceleration Move: "..tostring(bonused).."\nAcceleration Stage: "..stage)
+--     end
+-- end
 
 
 local function ffrg_onMissionChanged(mission, missionOld)
@@ -528,14 +594,16 @@ local function ffrg_onMissionUpdate(mission)
                             end
                         end
                     end
-                    if not GAME.ffrg_AcceleratedData[id] then
-                        if pawn:IsBusy() then
-                            data.timer = 1.2
-                            data.stagger = true
-                        elseif data.timer >= 1.2 or (data.stage == 2 and (data.timer >= 0.9 or ( data.stagger and data.timer >= 0.3 ))) then
-                            data.timer = data.timer % 0.3
-                            if data.stagger then data.stagger = false else data.stagger = true end
-                            Board:Ping(space,OvcColor)
+                    if not pawn:IsDead() then
+                        if not GAME.ffrg_AcceleratedData[id] then
+                            if pawn:IsBusy() then
+                                data.timer = 1.2
+                                data.stagger = true
+                            elseif data.timer >= 1.2 or (data.stage == 2 and (data.timer >= 0.9 or ( data.stagger and data.timer >= 0.3 ))) then
+                                data.timer = data.timer % 0.3
+                                if data.stagger then data.stagger = false else data.stagger = true end
+                                Board:Ping(space,OvcColor)
+                            end
                         end
                     end
                 elseif data.bonus_pings > 0 then
@@ -556,24 +624,26 @@ local function ffrg_onMissionUpdate(mission)
                     end
                 end
                 if isPlayerActionable then
-                    if not pawn:IsActive() then
-                        if data.stage == 1 then
-                            pawn:SetActive(true)
-                            data.stage = 2
-                        else
-                            ffrg_Overclock(pawn, false)
-                        end
-                    elseif pawn:GetBonusMove() > 0 then
-                        if data.stage == 1 then
-                            data.stage = 2
-                            local bonus = pawn:GetBonusMove()
-                            pawn:SetBonusMove(0)
-                            pawn:SetMovementSpent(false)
-                            if bonus ~= pawn:GetMoveSpeed() then
-                                pawn:AddMoveBonus(bonus-pawn:GetMoveSpeed())
+                    if not pawn:IsDead() and pawn:IsPowered() then
+                        if not pawn:IsActive() then
+                            if data.stage == 1 then
+                                pawn:SetActive(true)
+                                data.stage = 2
+                            else
+                                ffrg_Overclock(pawn, false)
                             end
-                        else
-                            ffrg_Overclock(pawn, false)
+                        elseif pawn:GetBonusMove() > 0 then
+                            if data.stage == 1 then
+                                data.stage = 2
+                                local bonus = pawn:GetBonusMove()
+                                pawn:SetBonusMove(0)
+                                pawn:SetMovementSpent(false)
+                                if bonus ~= pawn:GetMoveSpeed() then
+                                    pawn:AddMoveBonus(bonus-pawn:GetMoveSpeed())
+                                end
+                            else
+                                ffrg_Overclock(pawn, false)
+                            end
                         end
                     end
                 end
@@ -646,22 +716,24 @@ local function ffrg_onMissionUpdate(mission)
                             end
                         end
                     end
-                    if not GAME.ffrg_OverclockedData[id] then
-                        if pawn:IsBusy() then
-                            data.timer = 1.2
-                        elseif data.timer >= 1.2 or ( data.stage == 2 and data.timer >= 0.75 ) then
-                            data.timer = data.timer % 0.15
-                            Board:Ping(space,AccColor)
-                        end
-                    else
-                        if pawn:IsBusy() then
-                            data.timer = 0.6
-                        elseif data.timer >= 0.6 then
-                            data.timer = data.timer % 0.6
-                            if target ~= Point(-1,-1) then
-                                Board:Ping(target,MixColor)
+                    if not pawn:IsDead() then
+                        if not GAME.ffrg_OverclockedData[id] then
+                            if pawn:IsBusy() then
+                                data.timer = 1.2
+                            elseif data.timer >= 1.2 or ( data.stage == 2 and data.timer >= 0.75 ) then
+                                data.timer = data.timer % 0.15
+                                Board:Ping(space,AccColor)
                             end
-                            Board:Ping(space,MixColor)
+                        else
+                            if pawn:IsBusy() then
+                                data.timer = 0.6
+                            elseif data.timer >= 0.6 then
+                                data.timer = data.timer % 0.6
+                                if target ~= Point(-1,-1) then
+                                    Board:Ping(target,MixColor)
+                                end
+                                Board:Ping(space,MixColor)
+                            end
                         end
                     end
                 elseif data.bonus_pings > 0 then
@@ -681,29 +753,31 @@ local function ffrg_onMissionUpdate(mission)
                     end
                 end
                 if isPlayerActionable then
-                    if not data.bonused and not pawn:IsActive() then
-                        if data.stage == 1 then
-                            data.stage = 2
-                            moveUndoStorage[id] = moveUndoStorage[id] or {}
-                            table.insert(moveUndoStorage[id],true)
+                    if not pawn:IsDead() and pawn:IsPowered() then
+                        if not data.bonused and not pawn:IsActive() then
+                            if data.stage == 1 then
+                                data.stage = 2
+                                moveUndoStorage[id] = moveUndoStorage[id] or {}
+                                table.insert(moveUndoStorage[id],true)
+                            end
+                            pawn:SetBonusMove(pawn:GetMoveSpeed())
+                            pawn:SetActive(true)
+                            data.bonused = true
                         end
-                        pawn:SetBonusMove(pawn:GetMoveSpeed())
-                        pawn:SetActive(true)
-                        data.bonused = true
-                    end
-                    if data.stage == 2 and pawn:GetBonusMove() > 0 and data.bonused == false then
-                        data.stage = 1
-                    end
-                    if pawn:IsMovementSpent() and pawn:GetBonusMove() == 0 then
-                        if data.stage == 1 then
-                            pawn:SetMovementSpent(false)
-                            data.stage = 2
-                            moveUndoStorage[id] = moveUndoStorage[id] or {}
-                            table.insert(moveUndoStorage[id],data.bonused)
-                        else
-                            ffrg_Accelerate(pawn, false)
-                            moveUndoStorage[id] = moveUndoStorage[id] or {}
-                            table.insert(moveUndoStorage[id],data.bonused)
+                        if data.stage == 2 and pawn:GetBonusMove() > 0 and data.bonused == false then
+                            data.stage = 1
+                        end
+                        if pawn:IsMovementSpent() and pawn:GetBonusMove() == 0 then
+                            if data.stage == 1 then
+                                pawn:SetMovementSpent(false)
+                                data.stage = 2
+                                moveUndoStorage[id] = moveUndoStorage[id] or {}
+                                table.insert(moveUndoStorage[id],data.bonused)
+                            else
+                                ffrg_Accelerate(pawn, false)
+                                moveUndoStorage[id] = moveUndoStorage[id] or {}
+                                table.insert(moveUndoStorage[id],data.bonused)
+                            end
                         end
                     end
                 end
@@ -711,8 +785,6 @@ local function ffrg_onMissionUpdate(mission)
         end
     end
 end
-modApi.events.onMissionChanged:subscribe(ffrg_onMissionChanged)
-modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
 
 local function ffrg_onPawnUndoMove(mission, pawn, undonePosition)
     local id = pawn:GetId()
@@ -724,7 +796,7 @@ local function ffrg_onPawnUndoMove(mission, pawn, undonePosition)
             GAME.ffrg_AcceleratedData[id].timer = 1.2
             GAME.ffrg_AcceleratedData[id].bonused = false
         else
-            ffrg_Accelerate(pawn, true, {stage = 2, timer = 1.2, fx = false})
+            ffrg_Accelerate(pawn, true, {stage = 2, timer = 1.2, fx = false, event = false})
             if storage[#storage] == true then
                 GAME.ffrg_AcceleratedData[id].bonused = false
                 pawn:SetBonusMove(0)
@@ -737,7 +809,6 @@ local function ffrg_onPawnUndoMove(mission, pawn, undonePosition)
         end
     end
 end
-modapiext.events.onPawnUndoMove:subscribe(ffrg_onPawnUndoMove)
 
 Traits:add({
     func = function(trait,pawn,loc)
@@ -799,25 +870,43 @@ Traits:add({
 --//       Initialization       //--
 --////////////////////////////////--
 
-local function initialize()
-    ffrg_ActionsPlus.Overclock = ffrg_Overclock
-    ffrg_ActionsPlus.OverclockDamage = ffrg_OverclockDamage
-    ffrg_ActionsPlus.Accelerate = ffrg_Accelerate
-    ffrg_ActionsPlus.AccelerateDamage = ffrg_AccelerateDamage
-    ffrg_ActionsPlus.events = {}
-    ffrg_ActionsPlus.events.onPawnIsOverclocked = Event()
-    ffrg_ActionsPlus.events.onPawnIsAccelerated = Event()
-end
 
-if ffrg_ActionsPlus then
-    if modApi:isVersion(ffrg_ActionsPlus.Version, VERSION) and ffrg_ActionsPlus.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_ActionsPlus = ffrg_ActionsPlus or {}
-    initialize()
-end
+if not ffrg_ActionsPlus or ( modApi:isVersion(ffrg_ActionsPlus.Version, VERSION) and ffrg_ActionsPlus.version ~= VERSION ) then
 
+ --[[     Library    ]] ffrg_ActionsPlus = ffrg_ActionsPlus or {}
+ --[[     Version    ]] ffrg_ActionsPlus.version = VERSION
+ --[[ Initialization ]] ffrg_ActionsPlus.initialized = false
+
+ --[[    Overseer    ]] ffrg_ActionsPlus.events = {}
+ --[[      Event     ]] ffrg_ActionsPlus.events.onPawnIsOverclocked = Event()
+ --[[      Event     ]] ffrg_ActionsPlus.events.onPawnIsAccelerated = Event()
+
+end
+local function ffrg_onModsInitialized()
+if ffrg_ActionsPlus.version == VERSION and not ffrg_ActionsPlus.initialized then
+
+ --[[     Library    ]] ttrg_ActionsPlus = ttrg_ActionsPlus or {}
+ --[[ Initialization ]] ffrg_ActionsPlus.initialized = true
+
+ --[[     Global     ]] ffrg_ActionsPlus.Overclock = ffrg_Overclock
+ --[[     Global     ]] ffrg_ActionsPlus.OverclockDamage = ffrg_OverclockDamage
+ --[[     Global     ]] ffrg_ActionsPlus.Accelerate = ffrg_Accelerate
+ --[[     Global     ]] ffrg_ActionsPlus.AccelerateDamage = ffrg_AccelerateDamage
+
+ --[[  Subscription  ]] modApi.events.onMissionChanged:subscribe(ffrg_onMissionChanged)
+ --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
+ --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate2)
+ --[[  Subscription  ]] modapiext.events.onPawnUndoMove:subscribe(ffrg_onPawnUndoMove)
+ --[[  Subscription  ]] modApi.events.onGameEntered:subscribe(ffrg_onGameEntered)
+ --[[  Subscription  ]] modApi.events.onMissionStart:subscribe(ffrg_onMissionEnd)
+ --[[  Subscription  ]] modApi.events.onMissionEnd:subscribe(ffrg_onMissionEnd)
+ --[[  Subscription  ]] modApi.events.onTestMechEntered:subscribe(ffrg_onTestMechEntered)
+ --[[  Subscription  ]] modApi.events.onTestMechExited:subscribe(ffrg_onTestMechExited)
+
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_ActionsPlus
+
 
 --////////////////////////////////--

@@ -23,6 +23,7 @@ local path = mod_loader.mods[modApi.currentMod].resourcePath
 local imagePath = path .."img/"
 
 local files = {
+    "weapons/ffrg_prime_TC_doublefist.png",
     "weapons/ffrg_prime_heavyshove.png",
     "weapons/ffrg_prime_overdriveleap.png",
     "weapons/ffrg_brute_overdrivecharge.png",
@@ -185,6 +186,78 @@ end
 --////////////////////////////////--
 
 
+-----------------
+-- Ceres Fists --
+-----------------
+
+ffrg_Prime_TC_DoubleFist = Skill:new{
+    Name = "Ceres Fists",
+    Description = "Strike two adjacent tiles, rotating them in opposite directions.",
+    Class = "Prime",
+    Icon = "weapons/ffrg_prime_TC_doublefist.png",
+    StrikeSound = "",
+    Animation = "",
+    PathSize = 1,
+    TwoClick = true,
+    Damage = 1,
+    Upgrades = 2,
+    UpgradeCost = {2,2},
+    TipImage = {
+        Unit = Point(2,2),
+        Enemy = Point(2,3),
+        Enemy2 = Point(2,1),
+        Target = Point(2,3),
+        Second_Click = Point(2,1)
+    }
+}
+
+ffrg_Prime_TC_DoubleFist_A = ffrg_Prime_TC_DoubleFist:new{
+    UpgradeDescription = "Increase damage by 1.",
+    Damage = 2
+}
+
+ffrg_Prime_TC_DoubleFist_B = ffrg_Prime_TC_DoubleFist:new{
+    UpgradeDescription = "Increase damage by 1.",
+    Damage = 2
+}
+
+ffrg_Prime_TC_DoubleFist_AB = ffrg_Prime_TC_DoubleFist:new{
+    Damage = 3
+}
+
+Weapon_Texts.ffrg_Prime_TC_DoubleFist_Upgrade1 = "+1 Damage"
+Weapon_Texts.ffrg_Prime_TC_DoubleFist_Upgrade2 = "+1 Damage"
+
+function ffrg_Prime_TC_DoubleFist:GetSkillEffect(p1, p2)
+    local ret = SkillEffect()
+    local damage = ffrg_Rotate.RotateDamage(p2,0,{damage = self.Damage})
+    ret:AddDamage(damage)
+    return ret
+end
+
+function ffrg_Prime_TC_DoubleFist:GetSecondTargetArea(p1, p2)
+    local ret = PointList()
+    for i = 0, 3 do
+        local curr = p1+DIR_VECTORS[i]
+        if Board:IsValid(curr) and curr ~= p2 then ret:push_back(curr) end
+    end
+    return ret
+end
+
+function ffrg_Prime_TC_DoubleFist:GetFinalEffect(p1, p2, p3)
+    local ret = SkillEffect()
+    local damage1 = ffrg_Rotate.RotateDamage(p2,0,{damage = self.Damage})
+    local damage2 = ffrg_Rotate.RotateDamage(p3,1,{damage = self.Damage})
+    damage1.sAnimation = self.Animation.."0"
+    damage1.sSound = self.StrikeSound
+    damage2.sAnimation = self.Animation.."1"
+    damage2.sSound = self.StrikeSound
+    ret:AddMelee(p1,damage1,FULL_DELAY)
+    ret:AddDelay(0.05)
+    ret:AddMelee(p1,damage2,FULL_DELAY)
+    return ret
+end
+
 --------------------
 -- Palm of Saturn --
 --------------------
@@ -224,7 +297,7 @@ function ffrg_Prime_HeavyShove:GetSkillEffect(p1, p2)
     local direction = GetDirection(p2 - p1)
     local melee = SpaceDamage(p2,0)
     melee.bHide = true
-    ffrg_Shove.Shove(p2, direction, self.Force, {standard_anim = false, ret = ret, mode = "simple", delay = 0.27, origin = p1})
+    ffrg_Shove.Shove(p2, direction, self.Force, {standard_anim = false, ret = ret, mode = "simple", delay = 0.27, origin = p1, bounce_data = {{bounce_type = "single", bounce = -3},{bounce_type = "trail_2", bounce = -2}}})
     ret:AddScript("Board:AddAnimation("..p2:GetString()..",\""..self.Animation..direction.."\",1)")
     ret:AddDelay(0.2)
     ret:AddDamage(SoundEffect(Point(-1,-1),self.HitSound))

@@ -77,10 +77,10 @@ local function buildGetTipDamageOverride(skill)
 	end
 end
 
-modApi.events.onFrameDrawStart:subscribe(function()
-	tipSkillLast = tipSkill
+local function replaceFrame()
+    tipSkillLast = tipSkill
 	tipSkill = nil
-end)
+end
 
 local function overrideSkillFunction(skill, functionName, fn)
 	skill[functionName] = fn
@@ -109,11 +109,6 @@ local function ffrg_onSecondTargetAreaBuild(mission, pawn, weaponId, p1, p2, p3,
     end
 end
 
-modApi.events.onModsInitialized:subscribe(overrideAllSkills)
-
-modapiext.events.onTargetAreaBuild:subscribe(ffrg_onTargetAreaBuild)
-modapiext.events.onSecondTargetAreaBuild:subscribe(ffrg_onSecondTargetAreaBuild)
-
 local function ffrg_GetTipBoard()
     return TipImageBoards[tipSkillLast]
 end
@@ -141,22 +136,33 @@ end
 --////////////////////////////////--
 
 
-local function initialize()
-    ffrg_TipTracker.IsTip = ffrg_IsTip
-    ffrg_TipTracker.GetTip = ffrg_GetTip
-    ffrg_TipTracker.GetTipBoard = ffrg_GetTipBoard
-    ffrg_TipTracker.Version = VERSION
-end
+if not ffrg_TipTracker or ( modApi:isVersion(ffrg_TipTracker.Version, VERSION) and ffrg_TipTracker.version ~= VERSION ) then
 
-if ffrg_TipTracker then
-    if modApi:isVersion(ffrg_TipTracker.Version, VERSION) and ffrg_TipTracker.Version ~= VERSION then
-        initialize()
-    end
-else
-    ffrg_TipTracker = ffrg_TipTracker or {}
-    initialize()
-end
+ --[[     Library    ]] ffrg_TipTracker = ffrg_TipTracker or {}
+ --[[     Version    ]] ffrg_TipTracker.version = VERSION
+ --[[ Initialization ]] ffrg_TipTracker.initialized = false
 
+ --[[    Overseer    ]] ffrg_TipTracker.events = {}
+ --[[      Event     ]] ffrg_TipTracker.events.onTemplateEvent = Event()
+
+end
+local function ffrg_onModsInitialized()
+if ffrg_TipTracker.version == VERSION and not ffrg_TipTracker.initialized then
+
+ --[[     Library    ]] ttrg_TipTracker = ttrg_TipTracker or {}
+ --[[ Initialization ]] ffrg_TipTracker.initialized = true
+
+ --[[     Global     ]] ffrg_TipTracker.IsTip = ffrg_IsTip
+ --[[     Global     ]] ffrg_TipTracker.GetTip = ffrg_GetTip
+ --[[     Global     ]] ffrg_TipTracker.GetTipBoard = ffrg_GetTipBoard
+
+ --[[  Subscription  ]] modApi.events.onFrameDrawStart:subscribe(replaceFrame)
+ --[[  Subscription  ]] modapiext.events.onTargetAreaBuild:subscribe(ffrg_onTargetAreaBuild)
+ --[[  Subscription  ]] modapiext.events.onSecondTargetAreaBuild:subscribe(ffrg_onSecondTargetAreaBuild)
+ --[[    Function    ]] overrideAllSkills()
+
+end end
+modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
 return ffrg_TipTracker
 
 
