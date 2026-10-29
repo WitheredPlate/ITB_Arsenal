@@ -21,7 +21,7 @@
 -- Description --
 -----------------
 
-local VERSION = "1.2.1"
+local VERSION = "1.2.3"
 
 --## Template
 
@@ -126,6 +126,12 @@ local function ffrg_GetFrame(anim, timer)
     end
 end
 
+local function ffrg_GetPointOffset(p1, p2)
+    local xdif = p1.x-p2.x
+    local ydif = p1.y-p2.y
+    return Point(-28*(xdif-ydif),-21*(xdif+ydif))
+end
+
 local function ffrg_GetXDirection(dir)
     if dir == 1 then return 1
     elseif dir == 2 then return -1
@@ -139,6 +145,7 @@ local function ffrg_GetYDirection(dir)
     elseif dir == 3 then return -1
     else return -1 end
 end
+
 
 --////////////////////////////////--
 
@@ -189,9 +196,9 @@ local function ffrg_AddCustomProjectile(p1, p2, animation, config)
                 path.sAnimation = "nil"
                 config.ret:AddProjectile(p1, path, "", NO_DELAY)
             end
-            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomProjectile({duration = ("..distance.."*(1 / "..config.speed..")), distance = "..config.speed..", point = "..p1:GetString()..", x = "..anim.PosX..", y = "..anim.PosY..", dir = "..dir..", animation = \""..animation.."\", speed = "..config.speed..", finished = false, instance = 0},"..tostring(tip)..")")
+            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomProjectile({duration = ("..distance.."*(1 / "..config.speed..")), distance = "..config.speed..", point = "..p1:GetString()..", target = "..p2:GetString()..", x = "..anim.PosX..", y = "..anim.PosY..", dir = "..dir..", animation = \""..animation.."\", speed = "..config.speed..", finished = false, instance = 0},"..tostring(tip)..")")
         else
-            ffrg_InsertCustomProjectile({duration = (distance*(1 / config.speed)), distance = config.speed, point = p1, x = anim.PosX, y = anim.PosY, dir = dir, animation = animation, speed = config.speed, finished = false, instance = 0},tip)
+            ffrg_InsertCustomProjectile({duration = (distance*(1 / config.speed)), distance = config.speed, point = p1, target = p2, x = anim.PosX, y = anim.PosY, dir = dir, animation = animation, speed = config.speed, finished = false, instance = 0},tip)
             if config.damage then
                 local ret = SkillEffect()
                 ffrg_WorldConstants:setSpeed(ret, (config.speed/15))
@@ -210,7 +217,7 @@ end
 local function ffrg_AddCustomArtillery(p1, p2, animation, config)
     config = config or {}
     config.duration = config.duration or 0.75
-    config.height_map = config.height_map or "ffrg_CustomProjectile_StandardHeightMap"
+    config.height_map = config.height_map or "ttrg_CustomProjectile_StandardHeightMap"
     config.custom_shadow = config.custom_shadow or ""
     if config.directional == nil then
         config.directional = true
@@ -228,7 +235,6 @@ local function ffrg_AddCustomArtillery(p1, p2, animation, config)
         end
     end
     local dir = GetDirection(p2 - p1)
-    local distance = p1:Manhattan(p2)
     local tip = false
     if Board and Board:IsTipImage() then tip = true end
     if config.directional then
@@ -272,9 +278,9 @@ local function ffrg_AddCustomArtillery(p1, p2, animation, config)
                 trail.bHidePath = true
                 config.ret:AddArtillery(p1, trail, "effects/ffrg_nil_"..config.trail..".png", NO_DELAY)
             end
-            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomArtillery({duration = "..config.duration..", point = "..p1:GetString()..", target = "..p2:GetString()..", x = "..anim.PosX..", o_x = "..anim.PosX..", s_x = "..s_x..", so_x = "..s_x..", y = "..anim.PosY..", o_y = "..anim.PosY..", s_y = "..s_y..", so_y = "..s_y..", dir = "..dir..", animation = \""..animation.."\", shadow = \""..config.custom_shadow.."\", distance = "..distance..", finished = false, instance = 0, height_map = \""..config.height_map.."\"},"..tostring(tip)..")")
+            config.ret:AddScript("ttrg_CustomProjectile.InsertCustomArtillery({duration = "..config.duration..", point = "..p1:GetString()..", target = "..p2:GetString()..", x = "..anim.PosX..", o_x = "..anim.PosX..", s_x = "..s_x..", so_x = "..s_x..", y = "..anim.PosY..", o_y = "..anim.PosY..", s_y = "..s_y..", so_y = "..s_y..", dir = "..dir..", animation = \""..animation.."\", shadow = \""..config.custom_shadow.."\", finished = false, instance = 0, height_map = \""..config.height_map.."\"},"..tostring(tip)..")")
         else
-            ffrg_InsertCustomArtillery({duration = config.duration, point = p1, target = p2, x = anim.PosX, o_x = anim.PosX, s_x = s_x, so_x = s_x, y = anim.PosY, o_y = anim.PosY, s_y = s_y, so_y = s_y, dir = dir, animation = animation, shadow = config.custom_shadow, distance = distance, finished = false, instance = 0, height_map = config.height_map},tip)
+            ffrg_InsertCustomArtillery({duration = config.duration, point = p1, target = p2, x = anim.PosX, o_x = anim.PosX, s_x = s_x, so_x = s_x, y = anim.PosY, o_y = anim.PosY, s_y = s_y, so_y = s_y, dir = dir, animation = animation, shadow = config.custom_shadow, finished = false, instance = 0, height_map = config.height_map},tip)
             if config.damage then
                 local ret = SkillEffect()
                 if config.trail and config.height_map == "ffrg_CustomProjectile_StandardHeightMap" and config.duration == 0.75 then
@@ -346,7 +352,7 @@ local function ProjectileProgress(boardTemp, animString)
             projectile.timer = ( projectile.timer or 0 ) + time_delta
             local anim_old = ANIMS[projectile.animation]
             if anim_old then
-                local anim_new_id = animString..projectile.animation.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.dir.."_"..projectile.distance
+                local anim_new_id = animString..projectile.animation.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.target:GetString()
                 ANIMS[anim_new_id] = {}
                 ANIMS[anim_new_id].Layer = 0
                 ANIMS[anim_new_id].Image = anim_old.Image
@@ -360,7 +366,7 @@ local function ProjectileProgress(boardTemp, animString)
                 boardTemp:AddAnimation(projectile.point, anim_new_id, 1)
                 if projectile.shadow and projectile.shadow ~= "" then
                     local anim_sold = ANIMS[projectile.shadow]
-                    local anim_snew_id = animString..projectile.shadow.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.dir.."_"..projectile.distance
+                    local anim_snew_id = animString..projectile.shadow.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.target:GetString()
                     ANIMS[anim_snew_id] = {}
                     ANIMS[anim_snew_id].Layer = 0
                     ANIMS[anim_snew_id].Image = anim_sold.Image
@@ -376,11 +382,12 @@ local function ProjectileProgress(boardTemp, animString)
             end
             if projectile.type == "artillery" then
                 local portion = projectile.timer/projectile.duration
-                projectile.x = projectile.o_x + (28*portion*projectile.distance*ffrg_GetXDirection(projectile.dir))
-                projectile.y = ( projectile.o_y + (21*portion*projectile.distance*ffrg_GetYDirection(projectile.dir)) ) - _G[projectile.height_map](portion)
+                local offset = ffrg_GetPointOffset(projectile.point,projectile.target)
+                projectile.x = projectile.o_x + portion*offset.x
+                projectile.y = projectile.o_y + portion*offset.y - _G[projectile.height_map](portion)
                 if projectile.shadow ~= "" then
-                    projectile.s_x = projectile.so_x + (28*portion*projectile.distance*ffrg_GetXDirection(projectile.dir))
-                    projectile.s_y = projectile.so_y + (21*portion*projectile.distance*ffrg_GetYDirection(projectile.dir))
+                    projectile.s_x = projectile.so_x + portion*offset.x
+                    projectile.s_y = projectile.so_y + portion*offset.y
                 end
             else
                 projectile.x = projectile.x + ((projectile.speed*28)*time_delta*ffrg_GetXDirection(projectile.dir))
@@ -394,9 +401,17 @@ local function ProjectileProgress(boardTemp, animString)
             local projectile = boardTemp.ffrg_CustomProjectiles[j]
             if projectile and projectile.finished then
                 for i = 1, projectile.instance do
-                    local anim_new_id = animString..projectile.animation.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.dir.."_"..projectile.distance
+                    local anim_new_id = animString..projectile.animation.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.target:GetString()
                     if ANIMS[anim_new_id] then
-                        --ANIMS[anim_new_id] = nil -- Clearing finished ANIMS to reduce memory usage
+                        ANIMS[anim_new_id] = nil -- Clearing finished ANIMS to reduce memory usage
+                    end
+                end
+                if projectile.shadow and projectile.shadow ~= "" then
+                    for i = 1, projectile.instance do
+                        local anim_snew_id = animString..projectile.shadow.."_"..projectile.instance.."_"..projectile.point:GetString().."_"..projectile.target:GetString()
+                        if ANIMS[anim_snew_id] then
+                            ANIMS[anim_snew_id] = nil -- Clearing finished ANIMS to reduce memory usage
+                        end
                     end
                 end
                 table.remove(boardTemp.ffrg_CustomProjectiles, j)
@@ -459,6 +474,8 @@ if ffrg_CustomProjectile.version == VERSION and not ffrg_CustomProjectile.initia
 
  --[[  Subscription  ]] modApi.events.onMissionUpdate:subscribe(ffrg_onMissionUpdate)
  --[[  Subscription  ]] modApi.events.onFrameDrawStart:subscribe(ffrg_onFrameDrawStart)
+
+    --Animation.GetImage = function(self, pawn) return self[members[i]]
 
 end end
 modApi.events.onModsInitialized:subscribe(ffrg_onModsInitialized)
